@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "855277726258",
+    "project_id": "maxim-8abdd",
+    "storage_bucket": "maxim-8abdd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855277726258:android:5cb847accbf030cb8f2a2b",
+        "android_client_info": {
+          "package_name": "com.example.maxim_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0jq4yvQcNV3Wn7f1NfBBYT4BsRyhQzto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

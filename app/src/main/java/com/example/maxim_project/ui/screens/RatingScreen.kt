@@ -9,21 +9,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.MaximNavBar
-import com.example.maxim_project.ui.components.MaximTextButton
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
 
-private val QUICK_REVIEWS = listOf("Ramah", "Tepat waktu", "Mengemudi aman", "Kendaraan bersih", "Perlu diperbaiki")
+private val POSITIVE_TAGS = listOf("Ramah", "Tepat waktu", "Mengemudi aman", "Kendaraan bersih", "Profesional")
+private val NEGATIVE_TAGS = listOf("Minta tarif lebih", "Ugal-ugalan", "Tidak ramah", "Tidak aman", "Kendaraan kotor")
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RatingScreen(
     onBack: () -> Unit,
@@ -31,155 +35,327 @@ fun RatingScreen(
     onReport: () -> Unit,
     onCS: () -> Unit
 ) {
-    var rating by remember { mutableIntStateOf(0) }
-    var comment by remember { mutableStateOf("") }
-    val selectedTags = remember { mutableStateListOf<String>() }
+    var rating by rememberSaveable { mutableIntStateOf(3) } // Default 3 stars as in first screenshot
+    var comment by rememberSaveable { mutableStateOf("") }
+    val selectedPositiveTags = remember { mutableStateListOf<String>() }
+    val selectedNegativeTags = remember { mutableStateListOf<String>() }
+    var isProblemsExpanded by rememberSaveable { mutableStateOf(true) }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Canvas)
     ) {
-        MaximNavBar(title = "Rating", onBack = onBack)
+        MaximNavBar(
+            title = "RATING DRIVER",
+            onBack = onBack,
+            rightIcon = Icons.Default.Headset,
+            onRightClick = onCS
+        )
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(SpaceLG),
+                .padding(horizontal = SpaceMD, vertical = SpaceSM),
+            verticalArrangement = Arrangement.spacedBy(SpaceMD),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Driver photo
+            Spacer(Modifier.height(8.dp))
+
+            // Driver Photo / Avatar Row
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(YellowLight)
-                    .border(2.dp, MaximYellow, CircleShape)
+                    .size(80.dp)
+                    .background(Color.White, CircleShape)
+                    .border(2.dp, Color(0xFFFFE600), CircleShape)
             ) {
-                Text("AS", style = MaterialTheme.typography.headlineMedium, color = MaximDarkGold)
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(44.dp)
+                )
             }
-            Spacer(Modifier.height(SpaceSM))
-            Text("Ahmad Suryadi", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
-            Text("Economy Bike • DA 1234 AB", style = MaterialTheme.typography.bodySmall, color = TextMuted)
-
-            Spacer(Modifier.height(SpaceLG))
-
-            // Star rating
-            Row(horizontalArrangement = Arrangement.spacedBy(SpaceXS)) {
-                repeat(5) { i ->
-                    IconButton(onClick = { rating = i + 1 }) {
-                        Icon(
-                            if (i < rating) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = "Star ${i + 1}",
-                            tint = if (i < rating) MaximGold else Hairline,
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
-                }
-            }
-            if (rating > 0) {
+            
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    when (rating) {
-                        1 -> "Sangat Buruk"
-                        2 -> "Buruk"
-                        3 -> "Cukup"
-                        4 -> "Baik"
-                        5 -> "Sangat Baik!"
-                        else -> ""
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (rating >= 4) Green else if (rating >= 3) MaximGold else Error
+                    text = "BUDI SANTOSO",
+                    fontSize = 18.sp,
+                    fontFamily = DisplayFont,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "CAR ECONOMY • B 1234 KLM",
+                    fontSize = 11.sp,
+                    fontFamily = MonoFont,
+                    color = TextMuted,
+                    letterSpacing = 0.5.sp
                 )
             }
 
-            Spacer(Modifier.height(SpaceLG))
+            Spacer(Modifier.height(8.dp))
 
-            // Quick review tags
-            Text("ULASAN CEPAT", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-            Spacer(Modifier.height(SpaceXS))
-
-            @OptIn(ExperimentalLayoutApi::class)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(SpaceXS),
-                verticalArrangement = Arrangement.spacedBy(SpaceXS),
-                modifier = Modifier.fillMaxWidth()
+            // Star Rating Row
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                QUICK_REVIEWS.forEach { tag ->
-                    val isSelected = tag in selectedTags
-                    val isNegative = tag == "Perlu diperbaiki"
-                    Box(
+                repeat(5) { i ->
+                    val isSelected = i < rating
+                    val starColor = if (rating <= 2) Color(0xFFEF4444) else Color(0xFFFFD600)
+                    Icon(
+                        imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
+                        contentDescription = "Star ${i + 1}",
+                        tint = if (isSelected) starColor else Hairline.copy(alpha = 0.8f),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(RadiusBub))
-                            .background(
-                                when {
-                                    isSelected && isNegative -> ErrorLight
-                                    isSelected -> GreenLight
-                                    else -> Surface
-                                }
-                            )
-                            .border(
-                                1.dp,
-                                when {
-                                    isSelected && isNegative -> Error
-                                    isSelected -> Green
-                                    else -> Hairline
-                                },
-                                RoundedCornerShape(RadiusBub)
-                            )
-                            .clickable {
-                                if (isSelected) selectedTags.remove(tag) else selectedTags.add(tag)
+                            .size(48.dp)
+                            .clickable { rating = i + 1 }
+                    )
+                }
+            }
+
+            // Rating description text label
+            if (rating > 0) {
+                Text(
+                    text = when (rating) {
+                        1 -> "SANGAT BURUK"
+                        2 -> "BURUK"
+                        3 -> "CUKUP BAIK"
+                        4 -> "BAIK"
+                        5 -> "SANGAT BAIK"
+                        else -> ""
+                    },
+                    fontSize = 12.sp,
+                    fontFamily = MonoFont,
+                    fontWeight = FontWeight.Bold,
+                    color = if (rating <= 2) Color(0xFFEF4444) else Color(0xFF22C55E),
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Positive reviews section (only visible if rating >= 3)
+            if (rating >= 3) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "YANG BERJALAN BAIK",
+                        fontSize = 11.sp,
+                        fontFamily = MonoFont,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF22C55E),
+                        letterSpacing = 0.5.sp
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        POSITIVE_TAGS.forEach { tag ->
+                            val isSelected = tag in selectedPositiveTags
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(RadiusBub))
+                                    .background(if (isSelected) Color(0xFFE8F5E9) else Color.White)
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) Color(0xFF22C55E) else Hairline.copy(alpha = 0.5f),
+                                        RoundedCornerShape(RadiusBub)
+                                    )
+                                    .clickable {
+                                        if (isSelected) selectedPositiveTags.remove(tag) else selectedPositiveTags.add(tag)
+                                    }
+                                    .padding(horizontal = SpaceMD, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    fontSize = 12.sp,
+                                    fontFamily = BodyFont,
+                                    color = if (isSelected) Color(0xFF22C55E) else TextBody
+                                )
                             }
-                            .padding(horizontal = SpaceMD, vertical = SpaceXS)
+                        }
+                    }
+                }
+            }
+
+            // Collapsible negative reviews section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isProblemsExpanded = !isProblemsExpanded }
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Flag,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "ADA MASALAH?",
+                            fontSize = 11.sp,
+                            fontFamily = MonoFont,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEF4444),
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                    Icon(
+                        imageVector = if (isProblemsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = Color(0xFFEF4444),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                if (isProblemsExpanded) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        NEGATIVE_TAGS.forEach { tag ->
+                            val isSelected = tag in selectedNegativeTags
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(RadiusBub))
+                                    .background(if (isSelected) Color(0xFFFFEBEE) else Color.White)
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) Color(0xFFEF4444) else Hairline.copy(alpha = 0.5f),
+                                        RoundedCornerShape(RadiusBub)
+                                    )
+                                    .clickable {
+                                        if (isSelected) selectedNegativeTags.remove(tag) else selectedNegativeTags.add(tag)
+                                    }
+                                    .padding(horizontal = SpaceMD, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    fontSize = 12.sp,
+                                    fontFamily = BodyFont,
+                                    color = if (isSelected) Color(0xFFEF4444) else TextBody
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Lapor Driver card
+            Card(
+                shape = RoundedCornerShape(RadiusMD),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF5F5)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Color(0xFFEF4444), RoundedCornerShape(RadiusMD))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Flag,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "LAPORKAN DRIVER",
+                            fontSize = 13.sp,
+                            fontFamily = DisplayFont,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEF4444)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Laporkan pelanggaran driver agar ditindaklanjuti tim Maxim.",
+                        fontSize = 11.sp,
+                        fontFamily = BodyFont,
+                        color = TextBody
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = onReport,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEF4444),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(RadiusSM),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
                     ) {
                         Text(
-                            tag,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = when {
-                                isSelected && isNegative -> Error
-                                isSelected -> Green
-                                else -> TextBody
-                            }
+                            text = "LAPORKAN SEKARANG",
+                            fontSize = 12.sp,
+                            fontFamily = DisplayFont,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(SpaceMD))
-
-            // Comment
-            OutlinedTextField(
-                value = comment,
-                onValueChange = { comment = it },
-                placeholder = { Text("Tulis komentar (opsional)") },
-                shape = RoundedCornerShape(RadiusSM),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaximYellow,
-                    unfocusedBorderColor = Hairline,
-                    cursorColor = MaximDarkGold
-                ),
-                minLines = 3,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(SpaceSM))
-            Row {
-                MaximTextButton("Laporkan Masalah", onClick = onReport, color = Error)
-                Spacer(Modifier.width(SpaceMD))
-                MaximTextButton("Hubungi CS", onClick = onCS, color = Blue)
+            // Comment text area
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "KOMENTAR (OPSIONAL)",
+                    fontSize = 10.sp,
+                    fontFamily = MonoFont,
+                    fontWeight = FontWeight.Bold,
+                    color = TextMuted,
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    placeholder = { Text("Tulis komentar (opsional)", fontSize = 13.sp, color = TextMuted) },
+                    shape = RoundedCornerShape(RadiusSM),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaximDarkGold,
+                        unfocusedBorderColor = Hairline,
+                        cursorColor = MaximDarkGold
+                    ),
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
-        // Bottom buttons
-        Column(modifier = Modifier.padding(SpaceMD)) {
-            PrimaryButton("Kirim Rating", onClick = onDone, enabled = rating > 0)
-            Spacer(Modifier.height(SpaceXS))
-            MaximTextButton(
-                "Lewati",
-                onClick = onDone,
-                color = TextMuted,
-                modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally)
+        // Bottom control buttons
+        HorizontalDivider(color = Hairline.copy(alpha = 0.3f), thickness = 1.dp)
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .padding(SpaceMD)
+        ) {
+            PrimaryButton(
+                text = "KIRIM RATING",
+                onClick = {
+                    android.widget.Toast.makeText(context, "Rating berhasil dikirim!", android.widget.Toast.LENGTH_SHORT).show()
+                    onDone()
+                },
+                color = Color(0xFFFFE600), // Solid Yellow
+                textColor = TextPrimary,
+                enabled = rating > 0
             )
         }
     }

@@ -20,4 +20,4 @@ val SpaceXXL = 64.dp
 // ─── STATUS BAR ───────────────────────────────────────────────────────
 val StatusBarHeight = 44.dp
 val NavBarHeight    = 52.dp
-val BottomBarHeight = 64.dp
+val BottomBarHeight = 80.dp

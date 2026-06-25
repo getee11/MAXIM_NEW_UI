@@ -1,7 +1,9 @@
 package com.example.maxim_project.navigation
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,8 +16,14 @@ fun MaximNavGraph(
     navController: NavHostController,
     onOrderSelected: (OrderData) -> Unit,
     getSelectedOrder: () -> OrderData?,
+    walletBalance: Int,
+    onWalletBalanceChange: (Int) -> Unit,
+    selectedService: String,
+    onServiceSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route,
@@ -54,7 +62,15 @@ fun MaximNavGraph(
             HomeTab(
                 onSearch = { navController.navigate(Screen.Location.route) },
                 onNotifications = { navController.navigate(Screen.Notifications.route) },
-                onWallet = { navController.navigate(Screen.Wallet.route) }
+                onWallet = { navController.navigate(Screen.Wallet.route) },
+                onSeeAllPromos = {
+                    navController.navigate(Screen.Promos.route) {
+                        popUpTo(Screen.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onServiceSelected = onServiceSelected
             )
         }
         composable(Screen.Orders.route) {
@@ -68,9 +84,12 @@ fun MaximNavGraph(
         }
         composable(Screen.Profile.route) {
             ProfileTab(
+                walletBalance = walletBalance,
                 onFAQ = { navController.navigate(Screen.FAQ.route) },
                 onCS = { navController.navigate(Screen.CS.route) },
                 onWallet = { navController.navigate(Screen.Wallet.route) },
+                onNotifications = { navController.navigate(Screen.Notifications.route) },
+                onLocation = { navController.navigate(Screen.Location.route) },
                 onLogout = {
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
@@ -86,12 +105,14 @@ fun MaximNavGraph(
         }
         composable(Screen.Vehicle.route) {
             VehicleScreen(
+                serviceType = selectedService,
                 onBack = { navController.popBackStack() },
                 onNext = { navController.navigate(Screen.Confirm.route) }
             )
         }
         composable(Screen.Confirm.route) {
             ConfirmScreen(
+                walletBalance = walletBalance,
                 onBack = { navController.popBackStack() },
                 onConfirm = { navController.navigate(Screen.Searching.route) }
             )
@@ -151,7 +172,11 @@ fun MaximNavGraph(
         composable(Screen.Report.route) {
             ReportScreen(
                 onBack = { navController.popBackStack() },
-                onDone = { navController.popBackStack() },
+                onDone = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
                 onCS = { navController.navigate(Screen.CS.route) }
             )
         }
@@ -159,7 +184,11 @@ fun MaximNavGraph(
             NotificationsScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.Wallet.route) {
-            WalletScreen(onBack = { navController.popBackStack() })
+            WalletScreen(
+                onBack = { navController.popBackStack() },
+                walletBalance = walletBalance,
+                onTopUp = { amount -> onWalletBalanceChange(walletBalance + amount) }
+            )
         }
         composable(Screen.CS.route) {
             CSScreen(onBack = { navController.popBackStack() })
@@ -176,7 +205,9 @@ fun MaximNavGraph(
                     onReport = {
                         navController.navigate(Screen.Report.route)
                     },
-                    onDownloadReceipt = { /* Simulating receipt download */ }
+                    onDownloadReceipt = {
+                        Toast.makeText(context, "Struk pesanan berhasil diunduh!", Toast.LENGTH_SHORT).show()
+                    }
                 )
             } else {
                 navController.popBackStack()

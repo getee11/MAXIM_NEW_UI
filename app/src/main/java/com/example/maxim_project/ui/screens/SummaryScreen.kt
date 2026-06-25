@@ -1,6 +1,6 @@
 package com.example.maxim_project.ui.screens
 
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,9 +18,13 @@ import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.components.SecondaryButton
 import com.example.maxim_project.ui.theme.*
+import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,6 +99,10 @@ fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
         Spacer(Modifier.height(SpaceLG))
 
         PrimaryButton("Beri Rating", onClick = onRate)
+        Spacer(Modifier.height(SpaceSM))
+        SecondaryButton("Cetak Struk", onClick = {
+            Toast.makeText(context, "Struk perjalanan berhasil diunduh!", Toast.LENGTH_SHORT).show()
+        })
         Spacer(Modifier.height(SpaceSM))
         SecondaryButton("Kembali ke Beranda", onClick = onClose)
     }

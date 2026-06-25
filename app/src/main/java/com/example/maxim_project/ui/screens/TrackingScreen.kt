@@ -1,5 +1,6 @@
 package com.example.maxim_project.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -12,11 +13,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.components.MapPlaceholder
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
+
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.shadow
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun TrackingScreen(
@@ -26,57 +38,137 @@ fun TrackingScreen(
     onReport: () -> Unit,
     onDone: () -> Unit
 ) {
-    var status by remember { mutableIntStateOf(0) }
-    val statuses = listOf(
-        "Driver menuju lokasi jemput",
-        "Driver tiba — silahkan naik",
-        "Dalam perjalanan"
-    )
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Canvas)
     ) {
-        MaximNavBar(
-            title = "Live Tracking",
-            onBack = onBack,
-            rightIcon = Icons.Default.Warning,
-            onRightClick = onReport
-        )
-
-        // Map with driver
-        MapPlaceholder(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            showDriverIcon = true,
-            showRoute = true
-        )
-
-        // Status label
+        // Map with driver and float overlays
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaximYellow)
-                .padding(SpaceSM),
-            contentAlignment = Alignment.Center
+                .weight(1.2f)
         ) {
-            Text(
-                statuses[status],
-                style = MaterialTheme.typography.labelMedium,
-                color = TextPrimary
+            MapPlaceholder(
+                modifier = Modifier.fillMaxSize(),
+                showDriverIcon = false,
+                showRoute = true
             )
+
+            // Top Floating Back Button
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(top = StatusBarHeight + 16.dp, start = 16.dp)
+                    .size(44.dp)
+                    .shadow(elevation = 4.dp, shape = CircleShape)
+                    .background(Color.White, CircleShape)
+                    .clickable(onClick = onBack)
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = TextPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Top Floating CS Button
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(top = StatusBarHeight + 16.dp, end = 16.dp)
+                    .size(44.dp)
+                    .shadow(elevation = 4.dp, shape = CircleShape)
+                    .background(Color.White, CircleShape)
+                    .clickable(onClick = onCS)
+                    .align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Headset,
+                    contentDescription = "Contact CS",
+                    tint = TextPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Bottom Left Floating Status Pill
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp))
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .border(1.dp, Color(0xFFFFE600), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(Color(0xFFFFD600), CircleShape)
+                    )
+                    Text(
+                        text = "DRIVER MENUJU LOKASI JEMPUT",
+                        fontSize = 9.sp,
+                        fontFamily = MonoFont,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            // Bottom Right Floating ETA Card
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp))
+                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "5",
+                        fontSize = 20.sp,
+                        fontFamily = DisplayFont,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "MENIT",
+                        fontSize = 8.sp,
+                        fontFamily = MonoFont,
+                        color = TextMuted,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
         }
 
-        // Driver info card
+        // Driver details card & Action buttons
         Card(
             shape = RoundedCornerShape(topStart = RadiusBub, topEnd = RadiusBub),
-            colors = CardDefaults.cardColors(containerColor = Canvas),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(1.dp, Hairline.copy(alpha = 0.5f)),
+                    RoundedCornerShape(topStart = RadiusBub, topEnd = RadiusBub)
+                )
         ) {
-            Column(modifier = Modifier.padding(SpaceMD)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 // Driver profile row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -86,83 +178,151 @@ fun TrackingScreen(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(52.dp)
-                            .clip(CircleShape)
-                            .background(YellowLight)
-                            .border(2.dp, MaximYellow, CircleShape)
+                            .background(Color.White, CircleShape)
+                            .border(2.dp, Color(0xFFFFE600), CircleShape)
                     ) {
-                        Text("AS", style = MaterialTheme.typography.titleMedium, color = MaximDarkGold)
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = TextMuted,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
-                    Spacer(Modifier.width(SpaceSM))
+                    Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Ahmad Suryadi", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                        Text(
+                            text = "BUDI SANTOSO",
+                            fontSize = 16.sp,
+                            fontFamily = DisplayFont,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Star, contentDescription = null, tint = MaximGold, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(SpaceXXS))
-                            Text("4.9", style = MaterialTheme.typography.labelSmall, color = TextBody)
-                            Spacer(Modifier.width(SpaceXS))
-                            Text("•", color = TextMuted)
-                            Spacer(Modifier.width(SpaceXS))
-                            Text("Honda Vario 150", style = MaterialTheme.typography.bodySmall, color = TextMuted)
+                            Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                                repeat(5) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFD600),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "4.97",
+                                fontSize = 11.sp,
+                                fontFamily = MonoFont,
+                                color = TextMuted,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
                         }
                     }
-                }
-
-                Spacer(Modifier.height(SpaceXS))
-
-                // Vehicle plate
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(RadiusXS))
-                        .background(Surface)
-                        .padding(horizontal = SpaceSM, vertical = SpaceXXS)
-                ) {
-                    Text("DA 1234 AB", style = MaterialTheme.typography.labelMedium, color = TextPrimary)
-                }
-
-                Spacer(Modifier.height(SpaceSM))
-
-                // ETA
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Schedule, contentDescription = null, tint = Blue, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(SpaceXXS))
-                        Text("ETA: 5 menit", style = MaterialTheme.typography.labelSmall, color = Blue)
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "TOYOTA AVANZA",
+                            fontSize = 9.sp,
+                            fontFamily = MonoFont,
+                            color = TextMuted,
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = "B 1234 KLM",
+                            fontSize = 13.sp,
+                            fontFamily = DisplayFont,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
                     }
-                    Text("Rp 15.000", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                 }
 
-                Spacer(Modifier.height(SpaceSM))
-                HorizontalDivider(color = Hairline.copy(alpha = 0.5f))
-                Spacer(Modifier.height(SpaceSM))
+                Spacer(Modifier.height(16.dp))
 
-                // Action buttons
+                // Driver contact / actions row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    ActionBtn(Icons.Default.Phone, "Telepon", Green) { }
-                    ActionBtn(Icons.Default.Chat, "Chat", Blue) { onChat() }
-                    ActionBtn(Icons.Default.Share, "Bagikan", Purple) { }
-                    ActionBtn(Icons.Default.Warning, "SOS", Error) { onReport() }
-                }
-
-                Spacer(Modifier.height(SpaceSM))
-
-                // Simulate journey progress
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(SpaceXS)
-                ) {
-                    PrimaryButton(
-                        text = if (status < 2) "Status →" else "Selesai",
+                    DriverActionButton(
+                        icon = Icons.Default.Phone,
+                        label = "TELEPON",
+                        tintColor = Green,
                         onClick = {
-                            if (status < 2) status++ else onDone()
+                            Toast.makeText(context, "Menghubungi Budi Santoso...", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.weight(1f)
+                    )
+                    DriverActionButton(
+                        icon = Icons.AutoMirrored.Filled.Chat,
+                        label = "CHAT",
+                        tintColor = Blue,
+                        onClick = onChat,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DriverActionButton(
+                        icon = Icons.Default.Share,
+                        label = "BAGIKAN",
+                        tintColor = TextMuted,
+                        onClick = {
+                            Toast.makeText(context, "Membagikan info perjalanan...", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider(color = Hairline.copy(alpha = 0.3f))
+                Spacer(Modifier.height(16.dp))
+
+                // Bottom CTA action buttons
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Laporkan button
+                    Button(
+                        onClick = onReport,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFF0F0),
+                            contentColor = Color(0xFFEF4444)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                        shape = RoundedCornerShape(RadiusSM),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Text("LAPORKAN DRIVER", fontSize = 13.sp, fontFamily = DisplayFont, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Emergency / SOS button
+                    Button(
+                        onClick = {
+                            Toast.makeText(context, "🚨 Menghubungi layanan darurat 112...", Toast.LENGTH_LONG).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEF4444),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(RadiusSM),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("DARURAT / SOS", fontSize = 13.sp, fontFamily = DisplayFont, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Done / Demo complete button
+                    PrimaryButton(
+                        text = "SELESAI (DEMO)",
+                        onClick = onDone,
+                        color = Color(0xFFFFE600), // Maxim Yellow
+                        textColor = TextPrimary,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -171,19 +331,42 @@ fun TrackingScreen(
 }
 
 @Composable
-private fun ActionBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, tint: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(onClick = onClick) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(tint.copy(alpha = 0.1f))
-            ) {
-                Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(20.dp))
-            }
+private fun DriverActionButton(
+    icon: ImageVector,
+    label: String,
+    tintColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = tintColor,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = label,
+                fontSize = 9.sp,
+                fontFamily = MonoFont,
+                fontWeight = FontWeight.Bold,
+                color = TextMuted,
+                letterSpacing = 0.5.sp
+            )
         }
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextBody)
     }
 }

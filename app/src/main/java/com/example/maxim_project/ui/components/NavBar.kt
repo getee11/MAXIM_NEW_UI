@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.example.maxim_project.ui.theme.*
 
 @Composable
@@ -20,6 +21,8 @@ fun MaximNavBar(
     onBack: (() -> Unit)? = null,
     rightIcon: ImageVector? = null,
     onRightClick: (() -> Unit)? = null,
+    titleColor: Color = TextPrimary,
+    backButtonTint: Color = TextPrimary,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -42,7 +45,7 @@ fun MaximNavBar(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = backButtonTint
                         )
                     }
                 }
@@ -51,7 +54,7 @@ fun MaximNavBar(
             Text(
                 text = title.uppercase(),
                 style = MaterialTheme.typography.headlineSmall,
-                color = TextPrimary,
+                color = titleColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
             )

@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.theme.*
+import com.example.maxim_project.data.InMemoryDatabase
 
 private data class NotifItem(
     val icon: ImageVector,
@@ -41,19 +42,22 @@ private data class NotifItem(
     val read: Boolean
 )
 
-private val INITIAL_NOTIFS = listOf(
-    NotifItem(Icons.Outlined.LocalOffer, "Promo spesial untukmu!", "Dapatkan 50% diskon perjalanan dengan kode MAXFIRST50.", "2 MNT LALU", Color(0xFF6C5A25), YellowLight, false),
-    NotifItem(Icons.Outlined.DirectionsCar, "Driver sedang menuju lokasimu", "Budi Santoso (B 1234 KLM) dalam perjalanan menjemputmu.", "15 MNT LALU", Color(0xFF3B82F6), BlueLight, false),
-    NotifItem(Icons.Outlined.CheckCircle, "Perjalanan selesai", "Perjalanan ke Kelapa Gading selesai. Rp 22.500 ditagih.", "1 JAM LALU", Color(0xFF22C55E), GreenLight, true),
-    NotifItem(Icons.Outlined.CardGiftcard, "Flash sale food delivery", "Gratis ongkir untuk pemesanan makanan hari ini!", "3 JAM LALU", Color(0xFF8C5C4C), TerracottaLight, true),
-    NotifItem(Icons.Outlined.Headphones, "CS membalas pesanmu", "Laporan #TKT-2821 telah diproses. Driver mendapat peringatan.", "KEMARIN", Color(0xFF3B82F6), BlueLight, true),
-)
+private fun getInitialNotifs(): List<NotifItem> {
+    val driver = InMemoryDatabase.currentDriver
+    return listOf(
+        NotifItem(Icons.Outlined.LocalOffer, "Promo spesial untukmu!", "Dapatkan 50% diskon perjalanan dengan kode MAXFIRST50.", "2 MNT LALU", Color(0xFF6C5A25), YellowLight, false),
+        NotifItem(Icons.Outlined.DirectionsCar, "Driver sedang menuju lokasimu", "${driver.namaDriver} (${driver.platNomor}) dalam perjalanan menjemputmu.", "15 MNT LALU", Color(0xFF3B82F6), BlueLight, false),
+        NotifItem(Icons.Outlined.CheckCircle, "Perjalanan selesai", "Perjalanan ke Kelapa Gading selesai. Rp 22.500 ditagih.", "1 JAM LALU", Color(0xFF22C55E), GreenLight, true),
+        NotifItem(Icons.Outlined.CardGiftcard, "Flash sale food delivery", "Gratis ongkir untuk pemesanan makanan hari ini!", "3 JAM LALU", Color(0xFF8C5C4C), TerracottaLight, true),
+        NotifItem(Icons.Outlined.Headphones, "CS membalas pesanmu", "Laporan #TKT-2821 telah diproses. Driver mendapat peringatan.", "KEMARIN", Color(0xFF3B82F6), BlueLight, true),
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    var notifs by remember { mutableStateOf(INITIAL_NOTIFS) }
+    var notifs by remember { mutableStateOf(getInitialNotifs()) }
     
     // Count unread
     val unreadCount = notifs.count { !it.read }

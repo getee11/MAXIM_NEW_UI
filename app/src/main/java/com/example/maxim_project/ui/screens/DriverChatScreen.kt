@@ -15,11 +15,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.theme.*
+import com.example.maxim_project.data.InMemoryDatabase
 
 private data class ChatMsg(val text: String, val isSent: Boolean, val time: String)
 
 @Composable
 fun DriverChatScreen(onBack: () -> Unit) {
+    val driverName = InMemoryDatabase.currentDriver.namaDriver
+
     var input by remember { mutableStateOf("") }
     val messages = remember {
         mutableStateListOf(
@@ -35,7 +38,7 @@ fun DriverChatScreen(onBack: () -> Unit) {
             .fillMaxSize()
             .background(Canvas)
     ) {
-        MaximNavBar(title = "Chat Driver", onBack = onBack)
+        MaximNavBar(title = "Chat • ${driverName}", onBack = onBack)
 
         // Chat messages
         LazyColumn(

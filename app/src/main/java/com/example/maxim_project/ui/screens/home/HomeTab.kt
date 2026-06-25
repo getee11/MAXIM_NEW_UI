@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.MapPlaceholder
 import com.example.maxim_project.ui.components.ServiceCard
 import com.example.maxim_project.ui.theme.*
+import com.example.maxim_project.data.InMemoryDatabase
 
 @Composable
 fun HomeTab(
@@ -57,10 +58,10 @@ fun HomeTab(
                     color = TextMuted
                 )
                 Text(
-                    text = "RIZKY PRATAMA",
-                    fontSize = 28.sp,
+                    text = InMemoryDatabase.currentUser.nama.uppercase(),
+                    fontSize = 20.sp,
                     fontFamily = DisplayFont,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = TextPrimary,
                     letterSpacing = 0.5.sp
                 )

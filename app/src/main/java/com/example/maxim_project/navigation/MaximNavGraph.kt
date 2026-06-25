@@ -1,12 +1,14 @@
 package com.example.maxim_project.navigation
 
 import android.widget.Toast
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import com.example.maxim_project.ui.components.OrderData
 import com.example.maxim_project.ui.screens.*
 import com.example.maxim_project.ui.screens.home.*
@@ -23,6 +25,12 @@ fun MaximNavGraph(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // Shared ViewModel instance — satu instance untuk seluruh flow
+    // (Tracking → Summary → Rating → Report → CS)
+    val reportViewModel: ReportViewModel = viewModel()
+
+    var selectedVehiclePrice by remember { mutableStateOf("Rp 18.000") }
 
     NavHost(
         navController = navController,
@@ -107,12 +115,16 @@ fun MaximNavGraph(
             VehicleScreen(
                 serviceType = selectedService,
                 onBack = { navController.popBackStack() },
-                onNext = { navController.navigate(Screen.Confirm.route) }
+                onNext = { price ->
+                    selectedVehiclePrice = price
+                    navController.navigate(Screen.Confirm.route)
+                }
             )
         }
         composable(Screen.Confirm.route) {
             ConfirmScreen(
                 walletBalance = walletBalance,
+                initialPrice = selectedVehiclePrice,
                 onBack = { navController.popBackStack() },
                 onConfirm = { navController.navigate(Screen.Searching.route) }
             )
@@ -129,6 +141,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Tracking.route) {
             TrackingScreen(
+                reportViewModel = reportViewModel,
                 onBack = { navController.popBackStack() },
                 onChat = { navController.navigate(Screen.DriverChat.route) },
                 onCS = { navController.navigate(Screen.CS.route) },
@@ -145,6 +158,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Summary.route) {
             SummaryScreen(
+                reportViewModel = reportViewModel,
                 onClose = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
@@ -159,6 +173,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Rating.route) {
             RatingScreen(
+                reportViewModel = reportViewModel,
                 onBack = { navController.popBackStack() },
                 onDone = {
                     navController.navigate(Screen.Home.route) {
@@ -171,6 +186,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Report.route) {
             ReportScreen(
+                reportViewModel = reportViewModel,
                 onBack = { navController.popBackStack() },
                 onDone = {
                     navController.navigate(Screen.Home.route) {

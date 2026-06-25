@@ -14,37 +14,63 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.model.PostTripReport
+import com.example.maxim_project.data.model.KategoriAduan
+import com.example.maxim_project.data.viewmodel.ReportUiState
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
+import java.util.UUID
 
 @Composable
-fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
-    var isSubmitted by rememberSaveable { mutableStateOf(false) }
+fun ReportScreen(
+    onBack: () -> Unit,
+    onDone: () -> Unit,
+    onCS: () -> Unit,
+    reportViewModel: ReportViewModel = viewModel()
+) {
+    val uiState by reportViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // React to state changes
+    val isSubmitted = uiState is ReportUiState.Success
+
+    // Show error toast jika gagal
+    LaunchedEffect(uiState) {
+        if (uiState is ReportUiState.Error) {
+            Toast.makeText(
+                context,
+                (uiState as ReportUiState.Error).message,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     if (!isSubmitted) {
         // --- STATE 1: REPORT FORM ---
         val selectedViolations = remember { mutableStateListOf<Int>() }
         var description by remember { mutableStateOf("") }
-        val violations = listOf(
-            "Minta tarif lebih",
-            "Perilaku tidak sopan",
-            "Mengemudi ugal-ugalan",
-            "Kendaraan tidak sesuai",
-            "Membatalkan perjalanan",
-            "Lainnya"
-        )
+
+        // Baca kategori aduan dari ViewModel (Tabel KATEGORI_ADUAN)
+        val kategoriList: List<KategoriAduan> = reportViewModel.kategoriAduan
+        val violations = kategoriList.map { it.namaKategori }
+
+        // Data driver & trip aktif dari ViewModel
+        val driver = reportViewModel.currentDriver
+        val trip = reportViewModel.currentTrip
+
+        val isLoading = uiState is ReportUiState.Loading
 
         Column(
             modifier = Modifier
@@ -96,7 +122,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                         // Driver Info
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "BUDI SANTOSO",
+                                text = driver.namaDriver.uppercase(),
                                 fontSize = 16.sp,
                                 fontFamily = DisplayFont,
                                 fontWeight = FontWeight.Bold,
@@ -108,7 +134,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "Toyota Avanza • B 1234 KLM",
+                                    text = "${trip.rute.split("→").first().trim()} • ${driver.platNomor}",
                                     fontSize = 11.sp,
                                     fontFamily = MonoFont,
                                     color = TextMuted,
@@ -125,7 +151,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                                 )
                                 Spacer(Modifier.width(2.dp))
                                 Text(
-                                    text = "4.97",
+                                    text = String.format("%.2f", driver.ratingRataRata),
                                     fontSize = 11.sp,
                                     fontFamily = MonoFont,
                                     color = TextMuted,
@@ -174,7 +200,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
+                                .clickable(enabled = !isLoading) {
                                     if (isSelected) {
                                         selectedViolations.remove(index)
                                     } else {
@@ -201,6 +227,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                                             selectedViolations.add(index)
                                         }
                                     },
+                                    enabled = !isLoading,
                                     colors = CheckboxDefaults.colors(
                                         checkedColor = Error,
                                         uncheckedColor = Hairline,
@@ -235,6 +262,7 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                         unfocusedContainerColor = Color.White,
                         cursorColor = Error
                     ),
+                    enabled = !isLoading,
                     minLines = 4,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -315,24 +343,65 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                         trimmedDesc.contains(" ") &&
                         trimmedDesc.filter { it.isLetter() }.toSet().size >= 4
 
-                PrimaryButton(
-                    text = "Kirim Laporan",
-                    onClick = { isSubmitted = true },
-                    enabled = selectedViolations.isNotEmpty() && isDescriptionValid,
-                    color = Error,
-                    textColor = Color.White
-                )
-                Spacer(Modifier.height(SpaceXS))
-                TextButton(
-                    onClick = onBack,
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(
-                        text = "BATAL",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = TextBody,
-                        fontWeight = FontWeight.Bold
+                if (isLoading) {
+                    // Loading indicator saat mengirim
+                    CircularProgressIndicator(
+                        color = Error,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(bottom = SpaceSM)
                     )
+                    Spacer(Modifier.height(SpaceXS))
+                    Text(
+                        text = "Mengirim laporan...",
+                        fontSize = 12.sp,
+                        fontFamily = MonoFont,
+                        color = TextMuted,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    PrimaryButton(
+                        text = "Kirim Laporan",
+                        onClick = {
+                            // Ambil kategori pertama yang dipilih sebagai FK (Many-to-One)
+                            val primaryKategoriId = selectedViolations.firstOrNull()?.let {
+                                kategoriList.getOrNull(it)?.kategoriId
+                            }
+
+                            // Build violation text dari checklist yang dipilih
+                            val selectedLabels = selectedViolations.map { violations[it] }
+                            val fullReview = buildString {
+                                append("Pelanggaran: ${selectedLabels.joinToString(", ")}")
+                                append("\n\nDetail: $description")
+                            }
+
+                            val report = PostTripReport(
+                                reportId = "RPT-${UUID.randomUUID().toString().take(8).uppercase()}",
+                                tripId = trip.tripId,
+                                driverId = driver.driverId,
+                                kategoriId = primaryKategoriId,
+                                ratingScore = 1, // Rating rendah karena ini adalah laporan keluhan
+                                customReviewText = fullReview,
+                                isEscalatedToCs = false
+                            )
+                            reportViewModel.submitReport(report)
+                        },
+                        enabled = selectedViolations.isNotEmpty() && isDescriptionValid,
+                        color = Error,
+                        textColor = Color.White
+                    )
+                    Spacer(Modifier.height(SpaceXS))
+                    TextButton(
+                        onClick = onBack,
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    ) {
+                        Text(
+                            text = "BATAL",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = TextBody,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -390,9 +459,16 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(SpaceSM),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // CHAT DENGAN CS
+                // CHAT DENGAN CS — juga eskalasi laporan ke CS
                 Button(
-                    onClick = onCS,
+                    onClick = {
+                        // Eskalasi laporan terakhir ke CS
+                        val latestReport = reportViewModel.reports.value.lastOrNull()
+                        latestReport?.let {
+                            reportViewModel.escalateToCs(it.reportId)
+                        }
+                        onCS()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Blue),
                     shape = RoundedCornerShape(RadiusSM),
                     modifier = Modifier
@@ -405,6 +481,11 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
                 // TELEPON CS
                 OutlinedButton(
                     onClick = {
+                        // Eskalasi laporan terakhir ke CS
+                        val latestReport = reportViewModel.reports.value.lastOrNull()
+                        latestReport?.let {
+                            reportViewModel.escalateToCs(it.reportId)
+                        }
                         Toast.makeText(context, "Menghubungi Customer Support...", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue),
@@ -419,7 +500,10 @@ fun ReportScreen(onBack: () -> Unit, onDone: () -> Unit, onCS: () -> Unit) {
 
                 // KEMBALI KE BERANDA (with custom golden/yellow outline border)
                 OutlinedButton(
-                    onClick = onDone,
+                    onClick = {
+                        reportViewModel.resetState()
+                        onDone()
+                    },
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
                     border = BorderStroke(2.dp, Color(0xFFFFD600)),
                     shape = RoundedCornerShape(RadiusSM),

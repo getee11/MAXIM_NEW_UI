@@ -20,10 +20,18 @@ import com.example.maxim_project.ui.components.SecondaryButton
 import com.example.maxim_project.ui.theme.*
 import androidx.compose.foundation.background
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 
 @Composable
-fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
+fun SummaryScreen(
+    onClose: () -> Unit,
+    onRate: () -> Unit,
+    reportViewModel: ReportViewModel = viewModel()
+) {
     val context = LocalContext.current
+    val driver = reportViewModel.currentDriver
+    val trip = reportViewModel.currentTrip
 
     Column(
         modifier = Modifier
@@ -63,11 +71,11 @@ fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
                 Text("DETAIL PERJALANAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                 Spacer(Modifier.height(SpaceSM))
 
-                DetailRow("Rute", "Lokasi saat ini → Duta Mall")
-                DetailRow("Jarak", "8.4 km")
-                DetailRow("Durasi", "23 menit")
-                DetailRow("Kendaraan", "Economy Bike")
-                DetailRow("Driver", "Ahmad Suryadi")
+                DetailRow("Rute", trip.rute)
+                DetailRow("Jarak", "8.4 km") // Hardcoded for demo
+                DetailRow("Durasi", "23 menit") // Hardcoded for demo
+                DetailRow("Kendaraan", "Economy Ride")
+                DetailRow("Driver", driver.namaDriver)
 
                 Spacer(Modifier.height(SpaceSM))
                 HorizontalDivider(color = Hairline.copy(alpha = 0.5f))
@@ -76,8 +84,8 @@ fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
                 Text("RINCIAN PEMBAYARAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                 Spacer(Modifier.height(SpaceXS))
 
-                PaymentRow("Tarif dasar", "Rp 12.000")
-                PaymentRow("Biaya jarak", "Rp 3.000")
+                PaymentRow("Tarif dasar", "Rp ${java.text.DecimalFormat("#,###").format(trip.tarif).replace(',', '.')}")
+                PaymentRow("Biaya jarak", "Rp 0")
                 PaymentRow("Diskon promo", "- Rp 0", Green)
 
                 Spacer(Modifier.height(SpaceXS))
@@ -89,7 +97,7 @@ fun SummaryScreen(onClose: () -> Unit, onRate: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Total Dibayar", style = MaterialTheme.typography.labelLarge, color = MaximDarkGold)
-                    Text("Rp 15.000", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                    Text("Rp ${java.text.DecimalFormat("#,###").format(trip.tarif).replace(',', '.')}", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
                 }
                 Spacer(Modifier.height(SpaceXXS))
                 Text("Tunai", style = MaterialTheme.typography.labelSmall, color = TextMuted)

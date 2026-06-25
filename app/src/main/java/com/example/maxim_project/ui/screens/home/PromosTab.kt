@@ -1,30 +1,32 @@
 package com.example.maxim_project.ui.screens.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.PromoCard
 import com.example.maxim_project.ui.components.PromoData
-import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
 
 private val PROMOS = listOf(
-    PromoData("Diskon 30% Motor", "Berlaku untuk semua perjalanan motor dalam kota", "MOTOR30", "30 Jun 2026", MaximYellow, YellowLight),
-    PromoData("Gratis Ongkir Kurir", "Pengiriman gratis untuk paket di bawah 5kg", "FREEONGKIR", "28 Jun 2026", Blue, BlueLight),
-    PromoData("Cashback Makanan 15%", "Min. order Rp 30.000 dari restoran mana saja", "MAKAN15", "25 Jun 2026", Terracotta, TerracottaLight),
-    PromoData("Premium Ride 50%", "Diskon mobil premium pertama kali", "PREMIUM50", "31 Jul 2026", Purple, PurpleLight),
-    PromoData("Top Up Bonus 20%", "Top up Maxim Pay min Rp 100.000", "TOPUP20", "15 Jul 2026", Green, GreenLight),
+    PromoData("BIKE", "50% untuk perjalanan ojek pertama", "Min. Rp 20.000", "MAXFIRST50", "30 JUN 2025", Color(0xFF6C5A25), YellowLight),
+    PromoData("CAR", "Diskon Rp 25.000 untuk taksi", "Min. Rp 50.000", "CAR25K", "29 JUN 2025", Color(0xFFFFD600), YellowLight),
+    PromoData("FOOD", "Gratis ongkir makanan Rp 15.000", "Tanpa minimum", "FOODFREE", "25 JUN 2025", Color(0xFF8C5C4C), TerracottaLight),
+    PromoData("DELIVERY", "Diskon 30% pengiriman barang", "Min. Rp 15.000", "SHIP30", "28 JUN 2025", Color(0xFF3B82F6), BlueLight),
 )
 
 @Composable
 fun PromosTab() {
-    var promoCode by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -32,39 +34,22 @@ fun PromosTab() {
             .background(Canvas)
     ) {
         Spacer(Modifier.height(StatusBarHeight + SpaceSM))
-        Text(
-            "PROMO",
-            style = MaterialTheme.typography.headlineSmall,
-            color = TextPrimary,
-            modifier = Modifier.padding(horizontal = SpaceMD)
-        )
-        Spacer(Modifier.height(SpaceMD))
-
-        // Input kode promo
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = SpaceMD),
-            horizontalArrangement = Arrangement.spacedBy(SpaceXS)
-        ) {
-            OutlinedTextField(
-                value = promoCode,
-                onValueChange = { promoCode = it.uppercase() },
-                placeholder = { Text("Masukkan kode promo") },
-                shape = RoundedCornerShape(RadiusSM),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaximYellow,
-                    unfocusedBorderColor = Hairline,
-                    cursorColor = MaximDarkGold
-                ),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+        
+        // Promo Header
+        Column(modifier = Modifier.padding(horizontal = SpaceMD)) {
+            Text(
+                text = "PROMO",
+                fontSize = 24.sp,
+                fontFamily = DisplayFont,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
-            PrimaryButton(
-                text = "Pakai",
-                onClick = { promoCode = "" },
-                modifier = Modifier.width(90.dp),
-                enabled = promoCode.isNotEmpty()
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Hemat lebih banyak dengan kode promo eksklusif.",
+                fontSize = 13.sp,
+                fontFamily = BodyFont,
+                color = TextMuted
             )
         }
 
@@ -75,9 +60,12 @@ fun PromosTab() {
             verticalArrangement = Arrangement.spacedBy(SpaceSM)
         ) {
             items(PROMOS) { promo ->
-                PromoCard(promo = promo, onCopy = { })
+                PromoCard(promo = promo, onCopy = {
+                    Toast.makeText(context, "Kode promo ${promo.code} berhasil disalin!", Toast.LENGTH_SHORT).show()
+                })
             }
             item { Spacer(Modifier.height(BottomBarHeight + SpaceMD)) }
         }
     }
 }
+

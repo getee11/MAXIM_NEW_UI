@@ -30,7 +30,13 @@ private val TRANSACTIONS = listOf(
 )
 
 @Composable
-fun WalletScreen(onBack: () -> Unit) {
+fun WalletScreen(
+    onBack: () -> Unit,
+    walletBalance: Int,
+    onTopUp: (Int) -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,11 +58,18 @@ fun WalletScreen(onBack: () -> Unit) {
             ) {
                 Text("SALDO ANDA", style = MaterialTheme.typography.labelMedium, color = MaximDarkGold)
                 Spacer(Modifier.height(SpaceXS))
-                Text("Rp 150.000", style = MaterialTheme.typography.displaySmall, color = TextPrimary)
+                Text(
+                    text = "Rp " + java.text.DecimalFormat("#,###").format(walletBalance).replace(',', '.'),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = TextPrimary
+                )
                 Spacer(Modifier.height(SpaceMD))
                 PrimaryButton(
                     text = "Top Up",
-                    onClick = { },
+                    onClick = {
+                        onTopUp(50000)
+                        android.widget.Toast.makeText(context, "Top Up Berhasil! Saldo bertambah Rp 50.000", android.widget.Toast.LENGTH_SHORT).show()
+                    },
                     color = TextPrimary,
                     textColor = Canvas,
                     modifier = Modifier.width(160.dp)

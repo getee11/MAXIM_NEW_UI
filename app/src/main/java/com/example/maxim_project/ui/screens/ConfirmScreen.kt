@@ -18,155 +18,344 @@ import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.components.SecondaryButton
 import com.example.maxim_project.ui.theme.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 
 @Composable
-fun ConfirmScreen(onBack: () -> Unit, onConfirm: () -> Unit) {
-    var note by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableIntStateOf(0) }
+fun ConfirmScreen(
+    walletBalance: Int,
+    onBack: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    val context = LocalContext.current
+    var promoCode by rememberSaveable { mutableStateOf("") }
+    var isPromoApplied by rememberSaveable { mutableStateOf(false) }
+    var hasHeavyLuggage by rememberSaveable { mutableStateOf(false) }
+    var hasPet by rememberSaveable { mutableStateOf(false) }
+    var hasChild by rememberSaveable { mutableStateOf(false) }
+    var driverNote by rememberSaveable { mutableStateOf("") }
+    var selectedPaymentMethod by rememberSaveable { mutableStateOf("DOMPET") } // DOMPET or TUNAI
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Canvas)
     ) {
-        MaximNavBar(title = "Konfirmasi", onBack = onBack)
+        MaximNavBar(title = "KONFIRMASI ORDER", onBack = onBack)
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(SpaceMD)
+                .padding(SpaceMD),
+            verticalArrangement = Arrangement.spacedBy(SpaceMD)
         ) {
-            // Trip summary
+            // Trip summary / Total
             Card(
                 shape = RoundedCornerShape(RadiusMD),
-                colors = CardDefaults.cardColors(containerColor = Surface),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusMD))
             ) {
-                Column(modifier = Modifier.padding(SpaceMD)) {
-                    Text("RINGKASAN PERJALANAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Spacer(Modifier.height(SpaceSM))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(Green))
-                        Spacer(Modifier.width(SpaceXS))
-                        Text("Lokasi saat ini", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-                    }
-                    Box(Modifier.padding(start = 3.dp).width(2.dp).height(16.dp).background(Hairline))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(Error))
-                        Spacer(Modifier.width(SpaceXS))
-                        Text("Duta Mall, Jl. A. Yani Km 2", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-                    }
-                    Spacer(Modifier.height(SpaceSM))
-                    HorizontalDivider(color = Hairline.copy(alpha = 0.5f))
-                    Spacer(Modifier.height(SpaceSM))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Economy Bike", style = MaterialTheme.typography.labelSmall, color = MaximDarkGold)
-                        Text("Rp 15.000", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(SpaceMD))
-
-            // Special requests
-            Text("PERMINTAAN KHUSUS", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-            Spacer(Modifier.height(SpaceXS))
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                placeholder = { Text("Catatan untuk driver (opsional)") },
-                shape = RoundedCornerShape(RadiusSM),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaximYellow,
-                    unfocusedBorderColor = Hairline,
-                    cursorColor = MaximDarkGold
-                ),
-                minLines = 2,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(SpaceMD))
-
-            // Payment method
-            Text("METODE PEMBAYARAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-            Spacer(Modifier.height(SpaceXS))
-
-            val methods = listOf(
-                Triple(Icons.Default.Money, "Tunai", MaximGold),
-                Triple(Icons.Default.AccountBalanceWallet, "Maxim Pay", Sand),
-                Triple(Icons.Default.CreditCard, "Kartu", Blue)
-            )
-            methods.forEachIndexed { i, (icon, label, accent) ->
-                val sel = i == paymentMethod
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(RadiusSM))
-                        .then(
-                            if (sel) Modifier.background(accent.copy(alpha = 0.08f)) else Modifier
-                        )
-                        .clickable { paymentMethod = i }
-                        .padding(SpaceSM),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = sel,
-                        onClick = { paymentMethod = i },
-                        colors = RadioButtonDefaults.colors(selectedColor = accent)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("TOTAL", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = if (isPromoApplied) "Rp 13.000" else "Rp 18.000",
+                        fontSize = 28.sp,
+                        fontFamily = DisplayFont,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
-                    Spacer(Modifier.width(SpaceXS))
-                    Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(SpaceXS))
-                    Text(label, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-                    if (label == "Maxim Pay") {
-                        Spacer(Modifier.weight(1f))
-                        Text("Rp 150.000", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                    if (isPromoApplied) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Promo diterapkan: Potongan Rp 5.000",
+                            fontSize = 11.sp,
+                            fontFamily = BodyFont,
+                            color = Green,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            Spacer(Modifier.height(SpaceMD))
-
-            // Price breakdown
+            // Metode Pembayaran section
             Card(
                 shape = RoundedCornerShape(RadiusMD),
-                colors = CardDefaults.cardColors(containerColor = YellowLight),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusMD))
             ) {
-                Column(modifier = Modifier.padding(SpaceMD)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Tarif dasar", style = MaterialTheme.typography.bodySmall, color = TextBody)
-                        Text("Rp 12.000", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("METODE PEMBAYARAN", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val isDompet = selectedPaymentMethod == "DOMPET"
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isDompet) Color(0xFFFFE600) else Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isDompet) Color(0xFFFFE600) else Hairline.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .clickable { selectedPaymentMethod = "DOMPET" }
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountBalanceWallet,
+                                    contentDescription = null,
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "DOMPET",
+                                        fontSize = 11.sp,
+                                        fontFamily = MonoFont,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "Rp " + java.text.DecimalFormat("#,###").format(walletBalance).replace(',', '.'),
+                                        fontSize = 9.sp,
+                                        fontFamily = BodyFont,
+                                        color = TextPrimary.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+
+                        val isTunai = selectedPaymentMethod == "TUNAI"
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isTunai) Color(0xFFFFE600) else Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isTunai) Color(0xFFFFE600) else Hairline.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .clickable { selectedPaymentMethod = "TUNAI" }
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Money,
+                                    contentDescription = null,
+                                    tint = if (isTunai) TextPrimary else TextBody,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "TUNAI",
+                                    fontSize = 11.sp,
+                                    fontFamily = MonoFont,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isTunai) TextPrimary else TextBody
+                                )
+                            }
+                        }
                     }
-                    Spacer(Modifier.height(SpaceXXS))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Biaya jarak", style = MaterialTheme.typography.bodySmall, color = TextBody)
-                        Text("Rp 3.000", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
+                }
+            }
+
+            // Kode Promo section
+            Card(
+                shape = RoundedCornerShape(RadiusMD),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusMD))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("KODE PROMO", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = promoCode,
+                            onValueChange = { promoCode = it },
+                            placeholder = { Text("Masukkan kode promo.", fontSize = 13.sp, color = TextMuted) },
+                            shape = RoundedCornerShape(RadiusSM),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaximDarkGold,
+                                unfocusedBorderColor = Hairline,
+                                cursorColor = MaximDarkGold
+                            ),
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Button(
+                            onClick = {
+                                if (promoCode.isNotBlank()) {
+                                    isPromoApplied = true
+                                    android.widget.Toast.makeText(context, "Promo Berhasil Diterapkan!", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFFDE7),
+                                contentColor = TextPrimary
+                            ),
+                            shape = RoundedCornerShape(RadiusSM),
+                            border = BorderStroke(1.dp, Color(0xFFFFE600)),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("PAKAI", fontSize = 13.sp, fontFamily = DisplayFont, fontWeight = FontWeight.Bold)
+                        }
                     }
-                    Spacer(Modifier.height(SpaceXS))
-                    HorizontalDivider(color = MaximYellow.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(SpaceXS))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("TOTAL", style = MaterialTheme.typography.labelLarge, color = MaximDarkGold)
-                        Text("Rp 15.000", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Dapatkan diskon spesial dengan memasukkan kode promo.",
+                        fontSize = 11.sp,
+                        fontFamily = BodyFont,
+                        color = TextMuted
+                    )
+                }
+            }
+
+            // Permintaan Khusus section
+            Card(
+                shape = RoundedCornerShape(RadiusMD),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusMD))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("PERMINTAAN KHUSUS", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Spacer(Modifier.height(12.dp))
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { hasHeavyLuggage = !hasHeavyLuggage }
+                    ) {
+                        Checkbox(
+                            checked = hasHeavyLuggage,
+                            onCheckedChange = { hasHeavyLuggage = it },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFFE600), checkmarkColor = TextPrimary)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Ada barang bawaan besar", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
                     }
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { hasPet = !hasPet }
+                    ) {
+                        Checkbox(
+                            checked = hasPet,
+                            onCheckedChange = { hasPet = it },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFFE600), checkmarkColor = TextPrimary)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Bawa hewan peliharaan", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { hasChild = !hasChild }
+                    ) {
+                        Checkbox(
+                            checked = hasChild,
+                            onCheckedChange = { hasChild = it },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFFE600), checkmarkColor = TextPrimary)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Bersama anak kecil", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                    Text("CATATAN UNTUK DRIVER", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Spacer(Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = driverNote,
+                        onValueChange = { driverNote = it },
+                        placeholder = { Text("Pesan tambahan...", fontSize = 13.sp, color = TextMuted) },
+                        shape = RoundedCornerShape(RadiusSM),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaximDarkGold,
+                            unfocusedBorderColor = Hairline,
+                            cursorColor = MaximDarkGold
+                        ),
+                        minLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
 
-        // Bottom buttons
-        Row(
+        // Bottom booking layout
+        HorizontalDivider(color = Hairline.copy(alpha = 0.3f), thickness = 1.dp)
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(SpaceMD),
-            horizontalArrangement = Arrangement.spacedBy(SpaceSM)
+                .background(Color.White)
+                .padding(SpaceMD)
         ) {
-            SecondaryButton("Batal", onClick = onBack, modifier = Modifier.weight(1f))
-            PrimaryButton("Konfirmasi", onClick = onConfirm, modifier = Modifier.weight(2f))
+            PrimaryButton(
+                text = "KONFIRMASI & PESAN",
+                onClick = {
+                    val price = if (isPromoApplied) 13000 else 18000
+                    if (selectedPaymentMethod == "DOMPET" && walletBalance < price) {
+                        android.widget.Toast.makeText(context, "Saldo dompet tidak cukup, silakan gunakan metode tunai atau top up terlebih dahulu.", android.widget.Toast.LENGTH_LONG).show()
+                    } else {
+                        onConfirm()
+                    }
+                },
+                color = Color(0xFFFFE600), // Solid Yellow
+                textColor = TextPrimary
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = onBack,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFF0F0), // light pink
+                    contentColor = Color(0xFFEF4444) // red
+                ),
+                border = BorderStroke(1.dp, Color(0xFFFCA5A5)), // pink border
+                shape = RoundedCornerShape(RadiusSM),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text(
+                    text = "BATAL",
+                    fontSize = 15.sp,
+                    fontFamily = DisplayFont,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+            }
         }
     }
 }

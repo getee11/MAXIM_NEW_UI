@@ -6,17 +6,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.DirectionsBike
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
@@ -32,78 +37,116 @@ private data class VehicleOption(
 )
 
 private val VEHICLES = listOf(
-    VehicleOption(Icons.Default.TwoWheeler, "Economy Bike", "1 penumpang, helm disediakan", "3 min", "Rp 15.000", MaximYellow, YellowLight),
-    VehicleOption(Icons.Default.DirectionsCar, "Economy Car", "4 penumpang, AC", "5 min", "Rp 32.000", MaximGold, GoldLight),
-    VehicleOption(Icons.Default.DirectionsCar, "Comfort Car", "4 penumpang, premium", "7 min", "Rp 45.000", Blue, BlueLight),
-    VehicleOption(Icons.Default.AirportShuttle, "Minivan", "6 penumpang, bagasi besar", "10 min", "Rp 65.000", Purple, PurpleLight),
-    VehicleOption(Icons.Default.LocalShipping, "Kurir Motor", "Paket s.d. 20kg", "4 min", "Rp 18.000", Green, GreenLight),
+    VehicleOption(Icons.Default.TwoWheeler, "BIKE ECONOMY", "CEPAT & HEMAT • 1 PENUMPANG", "~3 MNT", "Rp 18.000", MaximDarkGold, Color(0xFFFCF9DF)),
+    VehicleOption(Icons.Default.TwoWheeler, "BIKE PLUS", "HELM STANDAR SNI • 1 PENUMPANG", "~2 MNT", "Rp 22.000", MaximDarkGold, Color(0xFFFCF9DF)),
+    VehicleOption(Icons.Default.DirectionsCar, "CAR ECONOMY", "NYAMAN & TERJANGKAU • 4 PENUMPANG", "~6 MNT", "Rp 45.000", MaximDarkGold, Color(0xFFFCF9DF)),
+    VehicleOption(Icons.Default.DirectionsCar, "CAR COMFORT", "AC DINGIN, PREMIUM • 4 PENUMPANG", "~5 MNT", "Rp 65.000", MaximDarkGold, Color(0xFFFCF9DF)),
+    VehicleOption(Icons.Default.AirportShuttle, "MINIVAN", "KAPASITAS BESAR & LEGA • 6 PENUMPANG", "~8 MNT", "Rp 85.000", MaximDarkGold, Color(0xFFFCF9DF)),
 )
 
 @Composable
-fun VehicleScreen(onBack: () -> Unit, onNext: () -> Unit) {
-    var selectedIdx by remember { mutableIntStateOf(0) }
+fun VehicleScreen(
+    serviceType: String,
+    onBack: () -> Unit,
+    onNext: () -> Unit
+) {
+    val filteredVehicles = remember(serviceType) {
+        if (serviceType == "BIKE") {
+            VEHICLES.filter { it.name.contains("BIKE") }
+        } else {
+            VEHICLES.filter { it.name.contains("CAR") || it.name == "MINIVAN" }
+        }
+    }
+
+    var selectedIdx by rememberSaveable { mutableIntStateOf(0) }
+
+    LaunchedEffect(filteredVehicles) {
+        if (selectedIdx >= filteredVehicles.size) {
+            selectedIdx = 0
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Canvas)
     ) {
-        MaximNavBar(title = "Pilih Kendaraan", onBack = onBack)
+        MaximNavBar(title = "PILIH KENDARAAN", onBack = onBack)
 
-        // Route summary
-        Card(
-            shape = RoundedCornerShape(RadiusMD),
-            colors = CardDefaults.cardColors(containerColor = Surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(SpaceMD)
-        ) {
-            Row(
-                modifier = Modifier.padding(SpaceSM),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(Green))
-                        Spacer(Modifier.width(SpaceXS))
-                        Text("Lokasi saat ini", style = MaterialTheme.typography.bodySmall, color = TextBody)
-                    }
-                    Spacer(Modifier.height(SpaceXXS))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(Error))
-                        Spacer(Modifier.width(SpaceXS))
-                        Text("Duta Mall", style = MaterialTheme.typography.bodySmall, color = TextBody)
-                    }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("8.4 km", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Text("~23 min", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                }
-            }
-        }
-
-        // Vehicle list
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = SpaceMD),
-            verticalArrangement = Arrangement.spacedBy(SpaceXS)
+            contentPadding = PaddingValues(horizontal = SpaceMD, vertical = SpaceSM),
+            verticalArrangement = Arrangement.spacedBy(SpaceSM)
         ) {
-            itemsIndexed(VEHICLES) { i, v ->
+            // Route Card
+            item {
+                Card(
+                    shape = RoundedCornerShape(RadiusMD),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusMD))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Indicators column
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.width(12.dp)
+                        ) {
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(Green))
+                            // Dashed vertical line
+                            Box(
+                                Modifier
+                                    .width(1.dp)
+                                    .height(20.dp)
+                                    .background(Hairline)
+                            )
+                            Box(Modifier.size(8.dp).background(Error))
+                        }
+                        
+                        Spacer(Modifier.width(16.dp))
+
+                        // Addresses column
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Lokasi saat ini", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                            Spacer(Modifier.height(12.dp))
+                            Text("Kelapa Gading, Jakarta Utara", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                        }
+
+                        // Distance details
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "12.3 KM",
+                                fontSize = 11.sp,
+                                fontFamily = MonoFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Blue
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Vehicles list
+            itemsIndexed(filteredVehicles) { i, v ->
                 val selected = i == selectedIdx
                 val shape = RoundedCornerShape(RadiusMD)
                 Card(
                     shape = shape,
-                    colors = CardDefaults.cardColors(containerColor = if (selected) v.tintBg else Canvas),
+                    colors = CardDefaults.cardColors(containerColor = if (selected) v.tintBg else Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 2.dp else 0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (selected) Modifier.border(1.5.dp, v.accent, shape) else Modifier.border(1.dp, Hairline, shape)
+                            if (selected) Modifier.border(1.5.dp, v.accent, shape) else Modifier.border(1.dp, Hairline.copy(alpha = 0.5f), shape)
                         )
                         .clickable { selectedIdx = i }
                 ) {
                     Row(
-                        modifier = Modifier.padding(SpaceMD),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -111,43 +154,91 @@ fun VehicleScreen(onBack: () -> Unit, onNext: () -> Unit) {
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(RoundedCornerShape(RadiusSM))
-                                .background(if (selected) v.accent.copy(alpha = 0.15f) else Surface)
+                                .background(Color.White)
+                                .border(1.dp, Hairline.copy(alpha = 0.5f), RoundedCornerShape(RadiusSM))
                         ) {
-                            Icon(v.icon, contentDescription = null, tint = v.accent, modifier = Modifier.size(26.dp))
+                            Icon(
+                                v.icon,
+                                contentDescription = v.name,
+                                tint = TextPrimary,
+                                modifier = Modifier.size(26.dp)
+                            )
                         }
-                        Spacer(Modifier.width(SpaceSM))
+                        Spacer(Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(v.name, style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                            Text(v.desc, style = MaterialTheme.typography.bodySmall, color = TextMuted)
-                            Spacer(Modifier.height(SpaceXXS))
-                            Text("ETA: ${v.eta}", style = MaterialTheme.typography.labelSmall, color = v.accent)
+                            Text(
+                                text = v.name,
+                                fontSize = 15.sp,
+                                fontFamily = DisplayFont,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = v.desc,
+                                fontSize = 10.sp,
+                                fontFamily = MonoFont,
+                                color = TextMuted,
+                                letterSpacing = 0.5.sp
+                            )
                         }
-                        Text(v.price, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                        Column(
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = v.price,
+                                fontSize = 18.sp,
+                                fontFamily = DisplayFont,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selected) MaximDarkGold else TextPrimary
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = v.eta,
+                                fontSize = 11.sp,
+                                fontFamily = MonoFont,
+                                color = TextMuted,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // Bottom: price + book
-        Column(modifier = Modifier.padding(SpaceMD)) {
+        // Bottom estimation & booking layout
+        HorizontalDivider(color = Hairline.copy(alpha = 0.3f), thickness = 1.dp)
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .padding(SpaceMD)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Total Estimasi", style = MaterialTheme.typography.bodyMedium, color = TextBody)
                 Text(
-                    VEHICLES[selectedIdx].price,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimary
+                    "Total estimasi",
+                    fontSize = 13.sp,
+                    fontFamily = BodyFont,
+                    color = TextMuted
                 )
+                if (selectedIdx < filteredVehicles.size) {
+                    Text(
+                        text = filteredVehicles[selectedIdx].price,
+                        fontSize = 26.sp,
+                        fontFamily = DisplayFont,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
             }
-            Spacer(Modifier.height(SpaceSM))
+            Spacer(Modifier.height(12.dp))
             PrimaryButton(
-                text = "Pesan Sekarang",
+                text = "PESAN SEKARANG",
                 onClick = onNext,
-                color = VEHICLES[selectedIdx].accent,
-                textColor = if (VEHICLES[selectedIdx].accent == MaximYellow) TextPrimary else Canvas
+                color = Color(0xFFFFE600), // Solid Yellow
+                textColor = TextPrimary
             )
         }
     }

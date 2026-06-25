@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
 import com.example.maxim_project.navigation.MaximNavGraph
 import com.example.maxim_project.navigation.Screen
 import com.example.maxim_project.ui.components.MainTab
@@ -20,6 +22,8 @@ fun MaximApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     var selectedOrder by remember { mutableStateOf<OrderData?>(null) }
+    var walletBalance by rememberSaveable { mutableIntStateOf(150000) }
+    var selectedService by rememberSaveable { mutableStateOf("BIKE") }
 
     // Map the route string to MainTab enum
     val currentTab = when (currentRoute) {
@@ -61,7 +65,12 @@ fun MaximApp() {
             navController = navController,
             onOrderSelected = { selectedOrder = it },
             getSelectedOrder = { selectedOrder },
+            walletBalance = walletBalance,
+            onWalletBalanceChange = { walletBalance = it },
+            selectedService = selectedService,
+            onServiceSelected = { selectedService = it },
             modifier = Modifier.padding(innerPadding)
         )
     }
 }
+

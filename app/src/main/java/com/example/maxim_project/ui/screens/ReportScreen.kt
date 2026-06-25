@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.maxim_project.data.model.PostTripReport
 import com.example.maxim_project.data.model.KategoriAduan
@@ -67,8 +68,8 @@ fun ReportScreen(
         val violations = kategoriList.map { it.namaKategori }
 
         // Data driver & trip aktif dari ViewModel
-        val driver = reportViewModel.currentDriver
-        val trip = reportViewModel.currentTrip
+        val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+        val trip by reportViewModel.currentTrip.collectAsStateWithLifecycle()
 
         val isLoading = uiState is ReportUiState.Loading
 
@@ -122,7 +123,7 @@ fun ReportScreen(
                         // Driver Info
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = driver.namaDriver.uppercase(),
+                                text = driver?.namaDriver?.uppercase() ?: "SOPIR",
                                 fontSize = 16.sp,
                                 fontFamily = DisplayFont,
                                 fontWeight = FontWeight.Bold,
@@ -134,7 +135,7 @@ fun ReportScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "${trip.rute.split("→").first().trim()} • ${driver.platNomor}",
+                                    text = "${trip?.rute?.split("→")?.firstOrNull()?.trim() ?: ""} • ${driver?.platNomor ?: ""}",
                                     fontSize = 11.sp,
                                     fontFamily = MonoFont,
                                     color = TextMuted,
@@ -151,7 +152,7 @@ fun ReportScreen(
                                 )
                                 Spacer(Modifier.width(2.dp))
                                 Text(
-                                    text = String.format("%.2f", driver.ratingRataRata),
+                                    text = String.format("%.2f", driver?.ratingRataRata ?: 0.0),
                                     fontSize = 11.sp,
                                     fontFamily = MonoFont,
                                     color = TextMuted,
@@ -377,8 +378,8 @@ fun ReportScreen(
 
                             val report = PostTripReport(
                                 reportId = "RPT-${UUID.randomUUID().toString().take(8).uppercase()}",
-                                tripId = trip.tripId,
-                                driverId = driver.driverId,
+                                tripId = trip?.tripId ?: "TRIP",
+                                driverId = driver?.driverId ?: "DRV",
                                 kategoriId = primaryKategoriId,
                                 ratingScore = 1, // Rating rendah karena ini adalah laporan keluhan
                                 customReviewText = fullReview,

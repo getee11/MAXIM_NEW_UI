@@ -9,6 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,10 +36,11 @@ private val TRANSACTIONS = listOf(
 @Composable
 fun WalletScreen(
     onBack: () -> Unit,
-    walletBalance: Int,
-    onTopUp: (Int) -> Unit
+    reportViewModel: ReportViewModel = viewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val currentUser by reportViewModel.currentUser.collectAsStateWithLifecycle()
+    val walletBalance = currentUser?.saldo ?: 0.0
 
     Column(
         modifier = Modifier
@@ -59,7 +64,7 @@ fun WalletScreen(
                 Text("SALDO ANDA", style = MaterialTheme.typography.labelMedium, color = MaximDarkGold)
                 Spacer(Modifier.height(SpaceXS))
                 Text(
-                    text = "Rp " + java.text.DecimalFormat("#,###").format(walletBalance).replace(',', '.'),
+                    text = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID")).format(walletBalance).replace("Rp", "Rp "),
                     style = MaterialTheme.typography.displaySmall,
                     color = TextPrimary
                 )
@@ -67,7 +72,7 @@ fun WalletScreen(
                 PrimaryButton(
                     text = "Top Up",
                     onClick = {
-                        onTopUp(50000)
+                        reportViewModel.topUpWallet(50000.0)
                         android.widget.Toast.makeText(context, "Top Up Berhasil! Saldo bertambah Rp 50.000", android.widget.Toast.LENGTH_SHORT).show()
                     },
                     color = TextPrimary,

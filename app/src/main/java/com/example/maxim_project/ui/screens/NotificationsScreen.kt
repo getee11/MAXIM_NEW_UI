@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.LocalOffer
 import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,37 +31,68 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.theme.*
-import com.example.maxim_project.data.InMemoryDatabase
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-private data class NotifItem(
+data class NotifItem(
     val icon: ImageVector,
     val title: String,
     val desc: String,
     val time: String,
     val accent: Color,
     val tintBg: Color,
-    val read: Boolean
+    val isRead: Boolean,
+    val originalIndex: Int
 )
-
-private fun getInitialNotifs(): List<NotifItem> {
-    val driver = InMemoryDatabase.currentDriver
-    return listOf(
-        NotifItem(Icons.Outlined.LocalOffer, "Promo spesial untukmu!", "Dapatkan 50% diskon perjalanan dengan kode MAXFIRST50.", "2 MNT LALU", Color(0xFF6C5A25), YellowLight, false),
-        NotifItem(Icons.Outlined.DirectionsCar, "Driver sedang menuju lokasimu", "${driver.namaDriver} (${driver.platNomor}) dalam perjalanan menjemputmu.", "15 MNT LALU", Color(0xFF3B82F6), BlueLight, false),
-        NotifItem(Icons.Outlined.CheckCircle, "Perjalanan selesai", "Perjalanan ke Kelapa Gading selesai. Rp 22.500 ditagih.", "1 JAM LALU", Color(0xFF22C55E), GreenLight, true),
-        NotifItem(Icons.Outlined.CardGiftcard, "Flash sale food delivery", "Gratis ongkir untuk pemesanan makanan hari ini!", "3 JAM LALU", Color(0xFF8C5C4C), TerracottaLight, true),
-        NotifItem(Icons.Outlined.Headphones, "CS membalas pesanmu", "Laporan #TKT-2821 telah diproses. Driver mendapat peringatan.", "KEMARIN", Color(0xFF3B82F6), BlueLight, true),
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsScreen(onBack: () -> Unit) {
+fun NotificationsScreen(
+    reportViewModel: ReportViewModel = viewModel(),
+    onBack: () -> Unit
+) {
+    val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+    val driverName = driver?.namaDriver ?: "Sopir"
+    val platNomor = driver?.platNomor ?: "B 1234 KLM"
     val context = LocalContext.current
-    var notifs by remember { mutableStateOf(getInitialNotifs()) }
     
+    val dbNotifs by reportViewModel.notifications.collectAsStateWithLifecycle()
+    
+    val notifs = dbNotifs.mapIndexed { idx, n ->
+        val isPromo = n.title.contains("Promo", true) || n.title.contains("sale", true)
+        val isCS = n.title.contains("CS", true) || n.title.contains("Sistem", true) || n.title.contains("Selesai", true)
+        val isDriver = n.title.contains("Driver", true)
+        
+        NotifItem(
+            icon = when {
+                isPromo -> Icons.Outlined.LocalOffer
+                isCS -> Icons.Outlined.Headphones
+                isDriver -> Icons.Outlined.DirectionsCar
+                else -> Icons.Outlined.AccessTime
+            },
+            title = n.title,
+            desc = n.desc,
+            time = n.time,
+            accent = when {
+                isPromo -> MaximYellow
+                isCS -> Color(0xFF3B82F6) // Blue
+                isDriver -> Color(0xFF22C55E) // Green
+                else -> Color(0xFF8B5CF6) // Purple
+            },
+            tintBg = when {
+                isPromo -> YellowLight
+                isCS -> BlueLight
+                isDriver -> GreenLight
+                else -> Color(0xFFEDE9FE)
+            },
+            isRead = n.isRead,
+            originalIndex = idx
+        )
+    }
+
     // Count unread
-    val unreadCount = notifs.count { !it.read }
+    val unreadCount = dbNotifs.count { !it.isRead }
 
     Column(
         modifier = Modifier
@@ -92,7 +124,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
             actions = {
                 // DoneAll double checkmark icon in green
                 IconButton(onClick = {
-                    notifs = notifs.map { it.copy(read = true) }
+                    reportViewModel.markAllNotificationsRead()
                     Toast.makeText(context, "Semua notifikasi ditandai dibaca", Toast.LENGTH_SHORT).show()
                 }) {
                     Icon(
@@ -135,7 +167,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
                     color = Color(0xFF3B82F6), // Blue
                     letterSpacing = 0.5.sp,
                     modifier = Modifier.clickable {
-                        notifs = notifs.map { it.copy(read = true) }
+                        reportViewModel.markAllNotificationsRead()
                         Toast.makeText(context, "Semua notifikasi ditandai dibaca", Toast.LENGTH_SHORT).show()
                     }
                 )
@@ -157,10 +189,8 @@ fun NotificationsScreen(onBack: () -> Unit) {
                         .border(1.dp, Hairline.copy(alpha = 0.5f), shape)
                         .clickable {
                             // Mark single notification read
-                            if (!notif.read) {
-                                notifs = notifs.mapIndexed { i, item ->
-                                    if (i == idx) item.copy(read = true) else item
-                                }
+                            if (!notif.isRead) {
+                                reportViewModel.markNotificationAsRead(dbNotifs[notif.originalIndex])
                             }
                             // Contextual Toast feedback based on notification type
                             val feedbackMsg = when {
@@ -233,7 +263,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
                         }
 
                         // Unread dot indicator on the far right
-                        if (!notif.read) {
+                        if (!notif.isRead) {
                             Spacer(Modifier.width(8.dp))
                             Box(
                                 modifier = Modifier

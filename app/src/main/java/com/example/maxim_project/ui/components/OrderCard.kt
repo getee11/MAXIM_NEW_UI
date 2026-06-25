@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.theme.*
-import com.example.maxim_project.data.InMemoryDatabase
+import com.example.maxim_project.data.local.SeedData
 
 data class OrderData(
     val date: String,
@@ -24,8 +24,8 @@ data class OrderData(
     val price: String,
     val status: String,
     val accent: Color,
-    val driver: String = InMemoryDatabase.currentDriver.namaDriver,
-    val vehicle: String = InMemoryDatabase.currentDriver.platNomor,
+    val driver: String = SeedData.drivers.first().namaDriver,
+    val vehicle: String = SeedData.drivers.first().platNomor,
     val duration: String = "23 min",
     val distance: String = "8.4 km",
     val rating: Int = 5

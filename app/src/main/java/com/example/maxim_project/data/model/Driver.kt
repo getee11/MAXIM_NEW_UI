@@ -1,5 +1,8 @@
 package com.example.maxim_project.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Entitas DRIVER (Pengemudi / Mitra).
  *
@@ -12,7 +15,9 @@ package com.example.maxim_project.data.model
  * @param platNomor      Plat nomor kendaraan (e.g., "B 1234 KLM").
  * @param ratingRataRata Rating rata-rata driver (1.0 – 5.0).
  */
+@Entity(tableName = "drivers")
 data class Driver(
+    @PrimaryKey
     val driverId: String,
     val namaDriver: String,
     val fotoDriver: String,

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,16 +24,23 @@ import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.MapPlaceholder
 import com.example.maxim_project.ui.components.ServiceCard
 import com.example.maxim_project.ui.theme.*
-import com.example.maxim_project.data.InMemoryDatabase
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun HomeTab(
+    reportViewModel: ReportViewModel = viewModel(),
     onSearch: () -> Unit,
     onNotifications: () -> Unit,
     onWallet: () -> Unit,
     onSeeAllPromos: () -> Unit,
     onServiceSelected: (String) -> Unit
 ) {
+    val user by reportViewModel.currentUser.collectAsStateWithLifecycle()
+    val userName = user?.nama ?: "Pengguna"
+    val notifs by reportViewModel.notifications.collectAsStateWithLifecycle()
+    val unreadCount = notifs.count { !it.isRead }
     var showAllServices by remember { mutableStateOf(false) }
 
     Column(
@@ -58,7 +66,7 @@ fun HomeTab(
                     color = TextMuted
                 )
                 Text(
-                    text = InMemoryDatabase.currentUser.nama.uppercase(),
+                    text = "Halo, ${userName.uppercase()}",
                     fontSize = 20.sp,
                     fontFamily = DisplayFont,
                     fontWeight = FontWeight.Bold,
@@ -84,8 +92,10 @@ fun HomeTab(
                 // Notification bell with badge "3"
                 IconButton(onClick = onNotifications) {
                     BadgedBox(badge = {
-                        Badge(containerColor = Error) {
-                            Text("3", style = MaterialTheme.typography.labelSmall, color = Canvas)
+                        if (unreadCount > 0) {
+                            Badge(containerColor = Error) {
+                                Text(unreadCount.toString(), style = MaterialTheme.typography.labelSmall, color = Canvas)
+                            }
                         }
                     }) {
                         Icon(

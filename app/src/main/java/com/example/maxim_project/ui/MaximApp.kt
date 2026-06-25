@@ -22,7 +22,6 @@ fun MaximApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     var selectedOrder by remember { mutableStateOf<OrderData?>(null) }
-    var walletBalance by rememberSaveable { mutableIntStateOf(150000) }
     var selectedService by rememberSaveable { mutableStateOf("BIKE") }
 
     // Map the route string to MainTab enum
@@ -65,8 +64,6 @@ fun MaximApp() {
             navController = navController,
             onOrderSelected = { selectedOrder = it },
             getSelectedOrder = { selectedOrder },
-            walletBalance = walletBalance,
-            onWalletBalanceChange = { walletBalance = it },
             selectedService = selectedService,
             onServiceSelected = { selectedService = it },
             modifier = Modifier.padding(innerPadding)

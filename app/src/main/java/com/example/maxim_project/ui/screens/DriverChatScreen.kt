@@ -9,19 +9,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.theme.*
-import com.example.maxim_project.data.InMemoryDatabase
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 
 private data class ChatMsg(val text: String, val isSent: Boolean, val time: String)
 
 @Composable
-fun DriverChatScreen(onBack: () -> Unit) {
-    val driverName = InMemoryDatabase.currentDriver.namaDriver
+fun DriverChatScreen(
+    reportViewModel: ReportViewModel = viewModel(),
+    onBack: () -> Unit
+) {
+    val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+    val driverName = driver?.namaDriver ?: "Sopir"
 
     var input by remember { mutableStateOf("") }
     val messages = remember {

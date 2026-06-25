@@ -21,9 +21,10 @@ import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
 
 @Composable
-fun AuthScreen(onNext: () -> Unit) {
+fun AuthScreen(onNext: (phone: String, password: String, name: String, isLogin: Boolean) -> Unit) {
     var isLogin by remember { mutableStateOf(true) }
     var phone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
@@ -90,6 +91,26 @@ fun AuthScreen(onNext: () -> Unit) {
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+        
+        Spacer(Modifier.height(SpaceMD))
+        
+        // Password input
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            placeholder = { Text("Masukkan password") },
+            shape = RoundedCornerShape(RadiusSM),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaximYellow,
+                unfocusedBorderColor = Hairline,
+                cursorColor = MaximDarkGold
+            ),
+            singleLine = true,
+            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Register-only fields
         if (!isLogin) {
@@ -127,9 +148,9 @@ fun AuthScreen(onNext: () -> Unit) {
         Spacer(Modifier.height(SpaceLG))
 
         PrimaryButton(
-            text = "Kirim Kode OTP",
-            onClick = onNext,
-            enabled = phone.length >= 9
+            text = if (isLogin) "Masuk" else "Daftar & Kirim OTP",
+            onClick = { onNext(phone, password, name, isLogin) },
+            enabled = phone.length >= 9 && password.isNotEmpty() && (isLogin || name.isNotEmpty())
         )
 
         Spacer(Modifier.height(SpaceMD))

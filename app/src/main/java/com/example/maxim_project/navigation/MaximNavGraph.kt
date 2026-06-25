@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.maxim_project.data.viewmodel.ReportViewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModelFactory
+import com.example.maxim_project.MaximApplication
 import com.example.maxim_project.ui.components.OrderData
 import com.example.maxim_project.ui.screens.*
 import com.example.maxim_project.ui.screens.home.*
@@ -18,19 +20,19 @@ fun MaximNavGraph(
     navController: NavHostController,
     onOrderSelected: (OrderData) -> Unit,
     getSelectedOrder: () -> OrderData?,
-    walletBalance: Int,
-    onWalletBalanceChange: (Int) -> Unit,
     selectedService: String,
     onServiceSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-
-    // Shared ViewModel instance — satu instance untuk seluruh flow
-    // (Tracking → Summary → Rating → Report → CS)
-    val reportViewModel: ReportViewModel = viewModel()
+    val repository = (context.applicationContext as MaximApplication).repository
+    val factory = ReportViewModelFactory(repository)
+    val reportViewModel: ReportViewModel = viewModel(factory = factory)
 
     var selectedVehiclePrice by remember { mutableStateOf("Rp 18.000") }
+    
+    var authPhone by remember { mutableStateOf("") }
+    var authName by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -52,7 +54,9 @@ fun MaximNavGraph(
             })
         }
         composable(Screen.Auth.route) {
-            AuthScreen(onNext = {
+            AuthScreen(onNext = { phone, password, name, isLogin ->
+                authPhone = phone
+                authName = name
                 navController.navigate(Screen.OTP.route)
             })
         }
@@ -60,6 +64,10 @@ fun MaximNavGraph(
             OTPScreen(
                 onBack = { navController.popBackStack() },
                 onVerified = {
+                    reportViewModel.registerOrLoginUser(
+                        name = authName.ifEmpty { "Pengguna" },
+                        phone = authPhone
+                    )
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
@@ -68,6 +76,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Home.route) {
             HomeTab(
+                reportViewModel = reportViewModel,
                 onSearch = { navController.navigate(Screen.Location.route) },
                 onNotifications = { navController.navigate(Screen.Notifications.route) },
                 onWallet = { navController.navigate(Screen.Wallet.route) },
@@ -82,17 +91,20 @@ fun MaximNavGraph(
             )
         }
         composable(Screen.Orders.route) {
-            OrdersTab(onOrderClick = { order ->
-                onOrderSelected(order)
-                navController.navigate(Screen.OrderDetail.route)
-            })
+            OrdersTab(
+                reportViewModel = reportViewModel,
+                onOrderClick = { order ->
+                    onOrderSelected(order)
+                    navController.navigate(Screen.OrderDetail.route)
+                }
+            )
         }
         composable(Screen.Promos.route) {
-            PromosTab()
+            PromosTab(reportViewModel = reportViewModel)
         }
         composable(Screen.Profile.route) {
             ProfileTab(
-                walletBalance = walletBalance,
+                reportViewModel = reportViewModel,
                 onFAQ = { navController.navigate(Screen.FAQ.route) },
                 onCS = { navController.navigate(Screen.CS.route) },
                 onWallet = { navController.navigate(Screen.Wallet.route) },
@@ -107,12 +119,14 @@ fun MaximNavGraph(
         }
         composable(Screen.Location.route) {
             LocationScreen(
+                reportViewModel = reportViewModel,
                 onBack = { navController.popBackStack() },
                 onNext = { navController.navigate(Screen.Vehicle.route) }
             )
         }
         composable(Screen.Vehicle.route) {
             VehicleScreen(
+                reportViewModel = reportViewModel,
                 serviceType = selectedService,
                 onBack = { navController.popBackStack() },
                 onNext = { price ->
@@ -123,7 +137,7 @@ fun MaximNavGraph(
         }
         composable(Screen.Confirm.route) {
             ConfirmScreen(
-                walletBalance = walletBalance,
+                reportViewModel = reportViewModel,
                 initialPrice = selectedVehiclePrice,
                 onBack = { navController.popBackStack() },
                 onConfirm = { navController.navigate(Screen.Searching.route) }
@@ -154,7 +168,10 @@ fun MaximNavGraph(
             )
         }
         composable(Screen.DriverChat.route) {
-            DriverChatScreen(onBack = { navController.popBackStack() })
+            DriverChatScreen(
+                reportViewModel = reportViewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.Summary.route) {
             SummaryScreen(
@@ -197,13 +214,15 @@ fun MaximNavGraph(
             )
         }
         composable(Screen.Notifications.route) {
-            NotificationsScreen(onBack = { navController.popBackStack() })
+            NotificationsScreen(
+                reportViewModel = reportViewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.Wallet.route) {
             WalletScreen(
-                onBack = { navController.popBackStack() },
-                walletBalance = walletBalance,
-                onTopUp = { amount -> onWalletBalanceChange(walletBalance + amount) }
+                reportViewModel = reportViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.CS.route) {

@@ -1,0 +1,26 @@
+package com.example.maxim_project.navigation
+
+sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
+    object Onboarding : Screen("onboarding")
+    object Auth : Screen("auth")
+    object OTP : Screen("otp")
+    object Home : Screen("home")
+    object Orders : Screen("orders")
+    object Promos : Screen("promos")
+    object Profile : Screen("profile")
+    object Location : Screen("location")
+    object Vehicle : Screen("vehicle")
+    object Confirm : Screen("confirm")
+    object Searching : Screen("searching")
+    object Tracking : Screen("tracking")
+    object DriverChat : Screen("driver_chat")
+    object Summary : Screen("summary")
+    object Rating : Screen("rating")
+    object Report : Screen("report")
+    object Notifications : Screen("notifications")
+    object Wallet : Screen("wallet")
+    object CS : Screen("cs")
+    object OrderDetail : Screen("order_detail")
+    object FAQ : Screen("faq")
+}

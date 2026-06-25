@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.theme.*
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import com.example.maxim_project.data.InMemoryDatabase
 
 @Composable
 fun ProfileTab(
@@ -84,7 +85,7 @@ fun ProfileTab(
                 // Profile Details
                 Column {
                     Text(
-                        text = "RIZKY PRATAMA",
+                        text = InMemoryDatabase.currentUser.nama.uppercase(),
                         fontSize = 20.sp,
                         fontFamily = DisplayFont,
                         fontWeight = FontWeight.Bold,

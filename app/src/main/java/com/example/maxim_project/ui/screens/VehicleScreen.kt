@@ -48,7 +48,7 @@ private val VEHICLES = listOf(
 fun VehicleScreen(
     serviceType: String,
     onBack: () -> Unit,
-    onNext: () -> Unit
+    onNext: (String) -> Unit
 ) {
     val filteredVehicles = remember(serviceType) {
         if (serviceType == "BIKE") {
@@ -236,7 +236,13 @@ fun VehicleScreen(
             Spacer(Modifier.height(12.dp))
             PrimaryButton(
                 text = "PESAN SEKARANG",
-                onClick = onNext,
+                onClick = { 
+                    if (selectedIdx < filteredVehicles.size) {
+                        onNext(filteredVehicles[selectedIdx].price)
+                    } else {
+                        onNext("Rp 0")
+                    }
+                },
                 color = Color(0xFFFFE600), // Solid Yellow
                 textColor = TextPrimary
             )

@@ -23,6 +23,10 @@ import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.maxim_project.data.viewmodel.ReportViewModel
+import com.example.maxim_project.data.viewmodel.RatingUiState
 
 private val POSITIVE_TAGS = listOf("Ramah", "Tepat waktu", "Mengemudi aman", "Kendaraan bersih", "Profesional")
 private val NEGATIVE_TAGS = listOf("Minta tarif lebih", "Ugal-ugalan", "Tidak ramah", "Tidak aman", "Kendaraan kotor")
@@ -33,7 +37,8 @@ fun RatingScreen(
     onBack: () -> Unit,
     onDone: () -> Unit,
     onReport: () -> Unit,
-    onCS: () -> Unit
+    onCS: () -> Unit,
+    reportViewModel: ReportViewModel = viewModel()
 ) {
     var rating by rememberSaveable { mutableIntStateOf(3) } // Default 3 stars as in first screenshot
     var comment by rememberSaveable { mutableStateOf("") }
@@ -42,6 +47,21 @@ fun RatingScreen(
     var isProblemsExpanded by rememberSaveable { mutableStateOf(true) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
+    val driver = reportViewModel.currentDriver
+    val trip = reportViewModel.currentTrip
+
+    val ratingUiState by reportViewModel.ratingUiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(ratingUiState) {
+        if (ratingUiState is RatingUiState.Success) {
+            android.widget.Toast.makeText(context, "Rating berhasil dikirim!", android.widget.Toast.LENGTH_SHORT).show()
+            reportViewModel.resetRatingState()
+            onDone()
+        } else if (ratingUiState is RatingUiState.Error) {
+            val msg = (ratingUiState as RatingUiState.Error).message
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -83,7 +103,7 @@ fun RatingScreen(
             
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "BUDI SANTOSO",
+                    text = driver.namaDriver.uppercase(),
                     fontSize = 18.sp,
                     fontFamily = DisplayFont,
                     fontWeight = FontWeight.Bold,
@@ -91,7 +111,7 @@ fun RatingScreen(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "CAR ECONOMY • B 1234 KLM",
+                    text = "ECONOMY RIDE • ${driver.platNomor}",
                     fontSize = 11.sp,
                     fontFamily = MonoFont,
                     color = TextMuted,
@@ -348,14 +368,18 @@ fun RatingScreen(
                 .padding(SpaceMD)
         ) {
             PrimaryButton(
-                text = "KIRIM RATING",
+                text = if (ratingUiState is RatingUiState.Loading) "MENGIRIM..." else "KIRIM RATING",
                 onClick = {
-                    android.widget.Toast.makeText(context, "Rating berhasil dikirim!", android.widget.Toast.LENGTH_SHORT).show()
-                    onDone()
+                    reportViewModel.submitRating(
+                        rating = rating,
+                        comment = comment,
+                        positiveTags = selectedPositiveTags,
+                        negativeTags = selectedNegativeTags
+                    )
                 },
                 color = Color(0xFFFFE600), // Solid Yellow
                 textColor = TextPrimary,
-                enabled = rating > 0
+                enabled = rating > 0 && ratingUiState !is RatingUiState.Loading
             )
         }
     }

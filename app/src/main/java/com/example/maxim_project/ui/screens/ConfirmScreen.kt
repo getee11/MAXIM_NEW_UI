@@ -29,6 +29,7 @@ import androidx.compose.foundation.border
 @Composable
 fun ConfirmScreen(
     walletBalance: Int,
+    initialPrice: String = "Rp 18.000",
     onBack: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -67,7 +68,13 @@ fun ConfirmScreen(
                     Text("TOTAL", fontSize = 11.sp, fontFamily = MonoFont, fontWeight = FontWeight.Bold, color = TextMuted)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = if (isPromoApplied) "Rp 13.000" else "Rp 18.000",
+                        text = if (isPromoApplied) {
+                            // Basic logic to subtract 5000 if promo applied, assuming format "Rp 18.000"
+                            val num = initialPrice.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 18000
+                            "Rp ${java.text.DecimalFormat("#,###").format(maxOf(0, num - 5000)).replace(',', '.')}"
+                        } else {
+                            initialPrice
+                        },
                         fontSize = 28.sp,
                         fontFamily = DisplayFont,
                         fontWeight = FontWeight.Bold,

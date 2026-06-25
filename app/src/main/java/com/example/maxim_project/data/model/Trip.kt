@@ -1,25 +1,37 @@
 package com.example.maxim_project.data.model
 
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
+
 /**
  * Entitas TRIP (Perjalanan).
  *
- * Menyimpan state perjalanan pengguna saat ini beserta relasi
- * ke [User] (penumpang) dan [Driver] (pengemudi).
- *
- * Relasi:
- * - Many-to-One ke [User]: banyak trip dipesan oleh 1 penumpang.
- * - Many-to-One ke [Driver]: banyak trip dikerjakan oleh 1 pengemudi.
+ * Menyimpan state perjalanan pengguna saat ini.
  *
  * @param tripId   Primary Key — ID unik perjalanan.
- * @param userId   Foreign Key → [User.userId].
- * @param driverId Foreign Key → [Driver.driverId].
- * @param rute     Deskripsi rute perjalanan (e.g., "Jl. Sudirman → Duta Mall").
- * @param tarif    Tarif perjalanan dalam Rupiah.
+ * @param userId   Foreign Key ke tabel User.
+ * @param driverId Foreign Key ke tabel Driver.
+ * @param rute     Deskripsi rute singkat (misal: "Lokasi saat ini → Duta Mall").
+ * @param tarif    Tarif perjalanan (dalam Rupiah).
  */
+@Entity(
+    tableName = "trips",
+    foreignKeys = [
+        ForeignKey(entity = User::class, parentColumns = ["userId"], childColumns = ["userId"]),
+        ForeignKey(entity = Driver::class, parentColumns = ["driverId"], childColumns = ["driverId"])
+    ]
+)
 data class Trip(
+    @PrimaryKey
     val tripId: String,
+    @ColumnInfo(index = true)
     val userId: String,
+    @ColumnInfo(index = true)
     val driverId: String,
     val rute: String,
-    val tarif: Double
+    val tarif: Double,
+    val tanggal: String = "",
+    val status: String = "ACTIVE"
 )

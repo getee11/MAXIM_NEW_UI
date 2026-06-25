@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
@@ -53,7 +55,11 @@ enum class FavoriteType {
 }
 
 @Composable
-fun LocationScreen(onBack: () -> Unit, onNext: () -> Unit) {
+fun LocationScreen(
+    reportViewModel: ReportViewModel = viewModel(),
+    onBack: () -> Unit,
+    onNext: () -> Unit
+) {
     var pickupText by rememberSaveable { mutableStateOf("Lokasi saat ini") }
     var destText by rememberSaveable { mutableStateOf("") }
     var showSuggestions by remember { mutableStateOf(false) }
@@ -284,7 +290,10 @@ fun LocationScreen(onBack: () -> Unit, onNext: () -> Unit) {
         Box(modifier = Modifier.padding(SpaceMD)) {
             PrimaryButton(
                 text = "KONFIRMASI LOKASI",
-                onClick = onNext,
+                onClick = {
+                    reportViewModel.updateLocations(pickupText, destText)
+                    onNext()
+                },
                 color = Color(0xFFFFE600), // Solid Yellow
                 textColor = TextPrimary,
                 enabled = destText.isNotEmpty()

@@ -1,31 +1,40 @@
 package com.example.maxim_project.data.model
 
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
+
 /**
  * Entitas POST_TRIP_REPORT (Laporan / Ulasan Pasca-Perjalanan).
  *
- * Ini adalah entitas jembatan yang paling krusial — menyimpan
- * hasil evaluasi penumpang setelah perjalanan selesai.
+ * Entitas POST_TRIP_REPORT (Laporan / Ulasan).
  *
- * Relasi:
- * - Many-to-One ke [Trip]: setiap laporan merujuk ke 1 perjalanan.
- * - Many-to-One ke [Driver]: setiap laporan merujuk ke 1 pengemudi.
- * - Many-to-One ke [KategoriAduan]: banyak laporan bisa dikategorikan ke 1 kategori aduan.
- * - One-to-One ke [CsTicket]: jika dieskalasi, 1 laporan menghasilkan 1 tiket CS.
+ * Menyimpan hasil ketikan penumpang saat melakukan komplain/evaluasi.
  *
- * @param reportId         Primary Key — ID unik laporan (UUID).
- * @param tripId           Foreign Key → [Trip.tripId].
- * @param driverId         Foreign Key → [Driver.driverId].
- * @param kategoriId       Foreign Key → [KategoriAduan.kategoriId] (opsional, terisi jika ada aduan).
- * @param ratingScore      Skor rating dari penumpang (1–5).
- * @param customReviewText Teks review/keluhan bebas dari penumpang.
- * @param isEscalatedToCs  Apakah laporan di-eskalasi ke Customer Support.
+ * @param reportId         Primary Key — ID unik laporan.
+ * @param tripId           Foreign Key ke tabel Trip.
+ * @param driverId         Foreign Key ke tabel Driver.
+ * @param ratingScore      Penilaian bintang (1-5). Opsional jika laporan bukan berupa rating murni.
+ * @param customReviewText Isi teks keluhan yang diketik bebas oleh penumpang.
+ * @param isEscalatedToCs  Flag penanda apakah laporan ini sudah diteruskan ke Customer Service.
  */
+@Entity(
+    tableName = "reports",
+    foreignKeys = [
+        ForeignKey(entity = Trip::class, parentColumns = ["tripId"], childColumns = ["tripId"]),
+        ForeignKey(entity = Driver::class, parentColumns = ["driverId"], childColumns = ["driverId"])
+    ]
+)
 data class PostTripReport(
+    @PrimaryKey
     val reportId: String,
+    @ColumnInfo(index = true)
     val tripId: String,
-    val driverId: String = "",
+    @ColumnInfo(index = true)
+    val driverId: String,
     val kategoriId: String? = null,
-    val ratingScore: Int,
-    val customReviewText: String,
+    val ratingScore: Int?,
+    val customReviewText: String?,
     val isEscalatedToCs: Boolean = false
 )

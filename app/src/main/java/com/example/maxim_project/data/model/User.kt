@@ -1,5 +1,8 @@
 package com.example.maxim_project.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Entitas USER (Penumpang).
  *
@@ -9,7 +12,9 @@ package com.example.maxim_project.data.model
  * @param nama      Nama lengkap penumpang.
  * @param saldo     Saldo dompet digital penumpang (dalam Rupiah).
  */
+@Entity(tableName = "users")
 data class User(
+    @PrimaryKey
     val userId: String,
     val nama: String,
     val saldo: Double

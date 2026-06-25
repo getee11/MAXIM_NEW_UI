@@ -47,8 +47,8 @@ fun RatingScreen(
     var isProblemsExpanded by rememberSaveable { mutableStateOf(true) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
-    val driver = reportViewModel.currentDriver
-    val trip = reportViewModel.currentTrip
+    val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+    val trip by reportViewModel.currentTrip.collectAsStateWithLifecycle()
 
     val ratingUiState by reportViewModel.ratingUiState.collectAsStateWithLifecycle()
 
@@ -103,7 +103,7 @@ fun RatingScreen(
             
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = driver.namaDriver.uppercase(),
+                    text = driver?.namaDriver?.uppercase() ?: "SOPIR",
                     fontSize = 18.sp,
                     fontFamily = DisplayFont,
                     fontWeight = FontWeight.Bold,
@@ -111,7 +111,7 @@ fun RatingScreen(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "ECONOMY RIDE • ${driver.platNomor}",
+                    text = "ECONOMY RIDE • ${driver?.platNomor ?: ""}",
                     fontSize = 11.sp,
                     fontFamily = MonoFont,
                     color = TextMuted,

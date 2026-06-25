@@ -10,6 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +32,7 @@ import androidx.compose.foundation.border
 
 @Composable
 fun ConfirmScreen(
-    walletBalance: Int,
+    reportViewModel: ReportViewModel = viewModel(),
     initialPrice: String = "Rp 18.000",
     onBack: () -> Unit,
     onConfirm: () -> Unit
@@ -41,6 +45,9 @@ fun ConfirmScreen(
     var hasChild by rememberSaveable { mutableStateOf(false) }
     var driverNote by rememberSaveable { mutableStateOf("") }
     var selectedPaymentMethod by rememberSaveable { mutableStateOf("DOMPET") } // DOMPET or TUNAI
+    
+    val currentUser by reportViewModel.currentUser.collectAsStateWithLifecycle()
+    val walletBalance = currentUser?.saldo ?: 0.0
 
     Column(
         modifier = Modifier
@@ -332,10 +339,13 @@ fun ConfirmScreen(
             PrimaryButton(
                 text = "KONFIRMASI & PESAN",
                 onClick = {
-                    val price = if (isPromoApplied) 13000 else 18000
+                    val num = initialPrice.replace(Regex("[^0-9]"), "").toDoubleOrNull() ?: 18000.0
+                    val price = if (isPromoApplied) maxOf(0.0, num - 5000.0) else num
+                    
                     if (selectedPaymentMethod == "DOMPET" && walletBalance < price) {
                         android.widget.Toast.makeText(context, "Saldo dompet tidak cukup, silakan gunakan metode tunai atau top up terlebih dahulu.", android.widget.Toast.LENGTH_LONG).show()
                     } else {
+                        reportViewModel.createTrip(price)
                         onConfirm()
                     }
                 },

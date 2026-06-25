@@ -30,6 +30,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import com.example.maxim_project.data.viewmodel.ReportViewModel
 
 @Composable
@@ -42,8 +44,8 @@ fun TrackingScreen(
     reportViewModel: ReportViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val driver = reportViewModel.currentDriver
-    val trip = reportViewModel.currentTrip
+    val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+    val trip by reportViewModel.currentTrip.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -196,7 +198,7 @@ fun TrackingScreen(
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = driver.namaDriver.uppercase(),
+                            text = driver?.namaDriver?.uppercase() ?: "SOPIR",
                             fontSize = 16.sp,
                             fontFamily = DisplayFont,
                             fontWeight = FontWeight.Bold,
@@ -215,7 +217,7 @@ fun TrackingScreen(
                             }
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = String.format("%.2f", driver.ratingRataRata),
+                                text = String.format("%.2f", driver?.ratingRataRata ?: 0.0),
                                 fontSize = 11.sp,
                                 fontFamily = MonoFont,
                                 color = TextMuted,
@@ -234,7 +236,7 @@ fun TrackingScreen(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = driver.platNomor,
+                            text = driver?.platNomor ?: "",
                             fontSize = 13.sp,
                             fontFamily = DisplayFont,
                             fontWeight = FontWeight.Bold,
@@ -255,7 +257,7 @@ fun TrackingScreen(
                         label = "TELEPON",
                         tintColor = Green,
                         onClick = {
-                            Toast.makeText(context, "Menghubungi ${driver.namaDriver}...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Menghubungi ${driver?.namaDriver ?: "Sopir"}...", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.weight(1f)
                     )

@@ -22,6 +22,9 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.maxim_project.data.viewmodel.ReportViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun SummaryScreen(
@@ -30,8 +33,14 @@ fun SummaryScreen(
     reportViewModel: ReportViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val driver = reportViewModel.currentDriver
-    val trip = reportViewModel.currentTrip
+    val driver by reportViewModel.currentDriver.collectAsStateWithLifecycle()
+    val trip by reportViewModel.currentTrip.collectAsStateWithLifecycle()
+    val pickup by reportViewModel.pickupLocation.collectAsStateWithLifecycle()
+    val destination by reportViewModel.destinationLocation.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        reportViewModel.completeTrip()
+    }
 
     Column(
         modifier = Modifier
@@ -71,11 +80,11 @@ fun SummaryScreen(
                 Text("DETAIL PERJALANAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                 Spacer(Modifier.height(SpaceSM))
 
-                DetailRow("Rute", trip.rute)
+                DetailRow("Rute", "$pickup - ${destination.ifEmpty { "Tujuan" }}")
                 DetailRow("Jarak", "8.4 km") // Hardcoded for demo
                 DetailRow("Durasi", "23 menit") // Hardcoded for demo
                 DetailRow("Kendaraan", "Economy Ride")
-                DetailRow("Driver", driver.namaDriver)
+                DetailRow("Driver", driver?.namaDriver ?: "")
 
                 Spacer(Modifier.height(SpaceSM))
                 HorizontalDivider(color = Hairline.copy(alpha = 0.5f))
@@ -84,7 +93,8 @@ fun SummaryScreen(
                 Text("RINCIAN PEMBAYARAN", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                 Spacer(Modifier.height(SpaceXS))
 
-                PaymentRow("Tarif dasar", "Rp ${java.text.DecimalFormat("#,###").format(trip.tarif).replace(',', '.')}")
+                val tarifVal = trip?.tarif ?: 0.0
+                PaymentRow("Tarif dasar", "Rp ${java.text.DecimalFormat("#,###").format(tarifVal).replace(',', '.')}")
                 PaymentRow("Biaya jarak", "Rp 0")
                 PaymentRow("Diskon promo", "- Rp 0", Green)
 
@@ -97,7 +107,7 @@ fun SummaryScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Total Dibayar", style = MaterialTheme.typography.labelLarge, color = MaximDarkGold)
-                    Text("Rp ${java.text.DecimalFormat("#,###").format(trip.tarif).replace(',', '.')}", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+                    Text("Rp ${java.text.DecimalFormat("#,###").format(tarifVal).replace(',', '.')}", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
                 }
                 Spacer(Modifier.height(SpaceXXS))
                 Text("Tunai", style = MaterialTheme.typography.labelSmall, color = TextMuted)

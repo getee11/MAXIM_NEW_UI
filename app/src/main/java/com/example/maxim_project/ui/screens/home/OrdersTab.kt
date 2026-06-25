@@ -9,23 +9,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.maxim_project.ui.components.OrderCard
 import com.example.maxim_project.ui.components.OrderData
 import com.example.maxim_project.ui.theme.*
 
-val SAMPLE_ORDERS = listOf(
-    OrderData("24 Jun 2026, 14:30", "Jl. A. Yani Km 5", "Duta Mall", "Motor", "Rp 18.000", "Selesai", MaximYellow),
-    OrderData("23 Jun 2026, 09:15", "Universitas Lambung Mangkurat", "Jl. Veteran", "Mobil", "Rp 35.000", "Selesai", MaximGold),
-    OrderData("22 Jun 2026, 19:45", "Kohy Coffee", "Kos Jl. Pramuka", "Motor", "Rp 12.000", "Dibatalkan", Error),
-    OrderData("21 Jun 2026, 12:00", "Jl. Gatot Subroto", "RS Ulin", "Kurir", "Rp 22.000", "Selesai", Blue),
-    OrderData("20 Jun 2026, 08:30", "Kos Jl. Pramuka", "Kampus FKIP", "Motor", "Rp 15.000", "Selesai", MaximYellow),
-)
-
 @Composable
-fun OrdersTab(onOrderClick: (OrderData) -> Unit) {
+fun OrdersTab(
+    reportViewModel: ReportViewModel = viewModel(),
+    onOrderClick: (OrderData) -> Unit
+) {
     var selectedFilter by remember { mutableIntStateOf(0) }
     val filters = listOf("Semua", "Aktif", "Selesai", "Dibatalkan")
 
@@ -71,11 +70,29 @@ fun OrdersTab(onOrderClick: (OrderData) -> Unit) {
 
         Spacer(Modifier.height(SpaceMD))
 
+        val userTrips by reportViewModel.userTrips.collectAsStateWithLifecycle()
+        
+        val allOrders = userTrips.map { trip ->
+            val parts = trip.rute.split("→")
+            val fromLoc = parts.getOrNull(0)?.trim() ?: trip.rute
+            val toLoc = parts.getOrNull(1)?.trim() ?: "Tujuan"
+            
+            OrderData(
+                date = trip.tanggal,
+                from = fromLoc,
+                to = toLoc,
+                type = "BIKE", // Default since we don't store it in Trip yet, or use "Maxim Bike"
+                price = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID")).format(trip.tarif).replace("Rp", "Rp "),
+                status = if (trip.status == "COMPLETED") "Selesai" else "Aktif",
+                accent = Color(0xFF6C5A25) // Default accent
+            )
+        }
+
         val filtered = when (selectedFilter) {
-            1 -> SAMPLE_ORDERS.filter { it.status == "Aktif" }
-            2 -> SAMPLE_ORDERS.filter { it.status == "Selesai" }
-            3 -> SAMPLE_ORDERS.filter { it.status == "Dibatalkan" }
-            else -> SAMPLE_ORDERS
+            1 -> allOrders.filter { it.status == "Aktif" }
+            2 -> allOrders.filter { it.status == "Selesai" }
+            3 -> allOrders.filter { it.status == "Dibatalkan" }
+            else -> allOrders
         }
 
         if (filtered.isEmpty()) {

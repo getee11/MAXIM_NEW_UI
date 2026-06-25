@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,11 +29,13 @@ import androidx.compose.ui.unit.sp
 import com.example.maxim_project.ui.theme.*
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import com.example.maxim_project.data.InMemoryDatabase
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ProfileTab(
-    walletBalance: Int,
+    reportViewModel: ReportViewModel = viewModel(),
     onFAQ: () -> Unit,
     onCS: () -> Unit,
     onWallet: () -> Unit,
@@ -42,6 +45,9 @@ fun ProfileTab(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val user by reportViewModel.currentUser.collectAsStateWithLifecycle()
+    val userName = user?.nama ?: "Pengguna"
+    val walletBalance = user?.saldo ?: 0.0
 
     Column(
         modifier = Modifier
@@ -83,10 +89,10 @@ fun ProfileTab(
                 Spacer(Modifier.width(20.dp))
 
                 // Profile Details
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = InMemoryDatabase.currentUser.nama.uppercase(),
-                        fontSize = 20.sp,
+                        text = userName.uppercase(),
+                        fontSize = 18.sp,
                         fontFamily = DisplayFont,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -147,7 +153,7 @@ fun ProfileTab(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Rp " + java.text.DecimalFormat("#,###").format(walletBalance).replace(',', '.'),
+                        text = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID")).format(walletBalance).replace("Rp", "Rp "),
                         fontSize = 24.sp,
                         fontFamily = DisplayFont,
                         fontWeight = FontWeight.Bold,
@@ -266,6 +272,17 @@ fun ProfileTab(
                 title = "KELUAR AKUN",
                 desc = "Keluar dari sesi masuk aplikasi saat ini",
                 onClick = onLogout,
+                accentColor = Error
+            )
+
+            // Test Crash button
+            ProfileCardItem(
+                icon = Icons.Outlined.Warning,
+                title = "TEST CRASH (CRASHLYTICS)",
+                desc = "Tekan tombol ini untuk simulasi force close",
+                onClick = {
+                    throw RuntimeException("Simulasi Test Crash untuk Crashlytics")
+                },
                 accentColor = Error
             )
         }

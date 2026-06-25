@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.maxim_project.data.viewmodel.ReportViewModel
 import com.example.maxim_project.ui.components.MaximNavBar
 import com.example.maxim_project.ui.components.PrimaryButton
 import com.example.maxim_project.ui.theme.*
@@ -41,11 +44,12 @@ private val VEHICLES = listOf(
     VehicleOption(Icons.Default.TwoWheeler, "BIKE PLUS", "HELM STANDAR SNI • 1 PENUMPANG", "~2 MNT", "Rp 22.000", MaximDarkGold, Color(0xFFFCF9DF)),
     VehicleOption(Icons.Default.DirectionsCar, "CAR ECONOMY", "NYAMAN & TERJANGKAU • 4 PENUMPANG", "~6 MNT", "Rp 45.000", MaximDarkGold, Color(0xFFFCF9DF)),
     VehicleOption(Icons.Default.DirectionsCar, "CAR COMFORT", "AC DINGIN, PREMIUM • 4 PENUMPANG", "~5 MNT", "Rp 65.000", MaximDarkGold, Color(0xFFFCF9DF)),
-    VehicleOption(Icons.Default.AirportShuttle, "MINIVAN", "KAPASITAS BESAR & LEGA • 6 PENUMPANG", "~8 MNT", "Rp 85.000", MaximDarkGold, Color(0xFFFCF9DF)),
+    VehicleOption(Icons.Default.AirportShuttle, "MINIVAN", "KAPASITAS BESAR & LEGA • 6 PENUMPANG", "~8 MNT", "Rp 85.000", MaximDarkGold, Color(0xFFFCF9DF))
 )
 
 @Composable
 fun VehicleScreen(
+    reportViewModel: ReportViewModel = viewModel(),
     serviceType: String,
     onBack: () -> Unit,
     onNext: (String) -> Unit
@@ -65,6 +69,9 @@ fun VehicleScreen(
             selectedIdx = 0
         }
     }
+    
+    val pickup by reportViewModel.pickupLocation.collectAsStateWithLifecycle()
+    val destination by reportViewModel.destinationLocation.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -111,9 +118,9 @@ fun VehicleScreen(
 
                         // Addresses column
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Lokasi saat ini", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                            Text(pickup, fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
                             Spacer(Modifier.height(12.dp))
-                            Text("Kelapa Gading, Jakarta Utara", fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
+                            Text(destination.ifEmpty { "Pilih lokasi tujuan" }, fontSize = 13.sp, fontFamily = BodyFont, color = TextPrimary)
                         }
 
                         // Distance details
